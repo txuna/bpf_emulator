@@ -162,7 +162,7 @@ struct block* gen_proto(uint32_t v, uint32_t proto)
         case ETHERTYPE_IP:
             // fragment 0만
             b0 = gen_linktype(proto);
-            b1 = gen_cmp(IP_HEADER_OFFSET + 9, BPF_B, v);
+            b1 = gen_cmp(IP_HEADER_OFFSET + IP_PROTOCOL_OFFSET, BPF_B, v);
             gen_and(b0, b1);
             break;
 
@@ -181,7 +181,7 @@ struct block* gen_linktype(uint32_t ethertype)
     // ldh [12]하는 slist만들고 
     // gen_cmp해서 나온것에 넣기
     // ldh밖에 없어서 gen_cmp로만 충분할듯
-    struct block *b = gen_cmp(ETHER_HEADER_OFFSET + 12, BPF_H, ethertype);
+    struct block *b = gen_cmp(ETHER_HEADER_OFFSET + ETHERTYPE_OFFSET, BPF_H, ethertype);
     return b;
 }
 
@@ -205,7 +205,7 @@ struct block* gen_port(uint32_t dir, uint32_t k)
 
 struct slist* gen_iphdrlen()
 {
-    struct slist *s = gen_load_x(ETHER_HEADER_OFFSET + 14, BPF_B);
+    struct slist *s = gen_load_x(ETHER_HEADER_OFFSET + IP_HEADER_LEN_OFFSET, BPF_B);
     return s;
 }
 
@@ -301,5 +301,27 @@ void bpf_disassembly(struct stmt s)
             break;
     }
 
+    return;
+}
+
+void free_bpf_block(struct block *blk)
+{
+    if(blk == NULL)
+    {
+        return;
+    }
+
+    free_bpf_block(blk->jt);
+    free_bpf_block(blk->jf);
+
+    // stmts 먼저 free
+    struct slist *cur = blk->stmts; 
+    while(cur)
+    {
+        struct slist* prev = cur; 
+        cur = cur->next;
+        free(prev);
+    }
+    free(blk);
     return;
 }

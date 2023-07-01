@@ -64,5 +64,6 @@ struct slist* sappend(struct slist* s0, struct slist* s1, int type);
 
 void bpf_dump(struct block *b);
 void bpf_disassembly(struct stmt s);
+void free_bpf_block(struct block *blk);
 
 #endif

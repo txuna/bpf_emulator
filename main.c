@@ -17,6 +17,7 @@ int main(int argc, char **argv)
         return 1; 
     }
     bpf_dump(p.blk);
+    free_bpf_block(p.blk);
     free(command);
     return 0;
 }

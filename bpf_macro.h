@@ -78,6 +78,11 @@
 #define SRC_IP_OFFSET 12
 #define DST_IP_OFFSET 16
 
+#define IP_PROTOCOL_OFFSET 9 
+#define ETHERTYPE_OFFSET 12
+
+#define IP_HEADER_LEN_OFFSET 14
+
 /*
  * Macros for insn array initializers.
  code들은 위의 매크로들과 | 연산해서 얻음 
