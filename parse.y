@@ -1,0 +1,125 @@
+%{
+
+#include "main.h"
+#include "bpf_macro.h"
+
+//extern int yylex(struct parser_state *p);
+//extern int yyparse(struct parser_state *p);
+//extern FILE* yyin;
+
+static void yyerror(parser_state *p, const char* s);
+%}
+
+%union {
+	uint32_t val;
+    char *str;
+    struct block *blk;
+}
+
+%token<val> T_UINT
+%token T_IP T_ICMP T_UDP T_TCP T_ARP
+%token  T_SRC T_DST
+%token  T_HOST T_PORT
+%token T_AND T_OR T_NOT
+%token T_NEWLINE
+
+%type<val> protocol
+%type<blk> pred expr state
+
+%parse-param {parser_state* p}
+
+%{
+int yylex();
+%}
+
+%left T_AND T_OR 
+%right T_NOT
+
+%start state
+
+%%
+
+state : expr 
+    {
+        // sense값 따라 쭉 이동하면서 마지막에 ret 2개 붙이기
+        p->blk = $1; //gen_ret($1);
+    }
+    ;
+
+expr : pred
+    {
+        $$ = $1;
+    }
+    | expr T_AND expr
+    {
+        gen_and($1, $3);
+        $$ = $1;
+    }
+    | expr T_OR expr
+    {
+        gen_or($1, $3);
+        $$ = $1; 
+    }
+    | T_NOT expr 
+    {
+        gen_not($2);
+        $$ = $2;
+    }
+    | '(' expr ')'
+    {
+        $$ = $2;
+    }
+    ;
+
+pred : protocol 
+    {
+        $$ = gen_proto_abbrev_internal($1);
+    }
+    /*
+    | protocol dir selector val
+    {
+        
+    }
+    */
+    ;
+    
+protocol : T_IP 
+        {
+            $$ = ETHERTYPE_IP;
+        }
+        | T_TCP
+        {
+            $$ = Q_TCP;
+        }
+        | T_UDP
+        {
+            $$ = Q_UDP;
+        }
+        | T_ARP
+        {
+            $$ = ETHERTYPE_ARP;
+        }
+        | T_ICMP
+        {
+            $$ = Q_ICMP;
+        }
+        ;
+/*
+dir : T_SRC
+    | T_DST 
+    ;
+    
+selector : T_HOST 
+        | T_PORT 
+        ;
+        
+
+val : T_UINT
+;
+*/
+
+%%
+
+void yyerror(struct parser_state *p, const char* s) {
+	fprintf(stderr, "Parse error: %s\n", s);
+}
