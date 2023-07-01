@@ -314,7 +314,7 @@ void free_bpf_block(struct block *blk)
     free_bpf_block(blk->jt);
     free_bpf_block(blk->jf);
 
-    // stmts 먼저 free
+    // stmts 먼저 free.
     struct slist *cur = blk->stmts; 
     while(cur)
     {
