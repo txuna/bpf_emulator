@@ -55,9 +55,9 @@ struct block* gen_proto_abbrev_internal(uint32_t proto);
 struct block* gen_proto(uint32_t v, uint32_t proto);
 struct block* gen_linktype(uint32_t ethertype);
 struct slist* gen_load_a(uint32_t offset, uint32_t size);
-struct block* gen_ret(struct block *b); 
+struct block* gen_ip(uint32_t dir, uint32_t k);
+struct block* gen_port(uint32_t dir, uint32_t k);
 
-struct block* gen_port(uint32_t type, uint32_t k);
 struct slist* gen_iphdrlen();
 struct slist* gen_load_x(uint32_t offset, uint32_t size);
 struct slist* sappend(struct slist* s0, struct slist* s1, int type);

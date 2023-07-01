@@ -42,11 +42,10 @@ void gen_not(struct block *b)
 // sense값 따라 세팅 
 // sense 값이 0이면 JT, 1이면 JF에 붙이기
 // sense값이 1이면 JF가 참 루트
-// 추후 null이 아닌 ret 코드 덮어쓰기
 void gen_and(struct block *b0, struct block *b1)
 {
     struct block *curr = b0;
-    while(!IS_RET(curr->jt->s.code) && !IS_RET(curr->jf->s.code))
+    while(curr->jt || curr->jf)
     {
         if(!curr->sense)
         {
@@ -70,7 +69,7 @@ void gen_and(struct block *b0, struct block *b1)
 void gen_or(struct block *b0, struct block *b1)
 {
     struct block *curr = b0;
-    while(!IS_RET(curr->jt->s.code) && !IS_RET(curr->jf->s.code))
+    while(curr->jt || curr->jf)
     {
         if(!curr->sense)
         {
@@ -114,43 +113,7 @@ struct block* gen_ncmp(uint32_t jtype, uint32_t offset, uint32_t size, uint32_t 
 
     s = gen_load_a(offset, size);
     b = new_block(JMP(jtype), value);
-    gen_ret(b);
     b->stmts = s; 
-
-    return b;
-}
-
-struct block* gen_ret(struct block *b)
-{
-    struct block *ret_jt; 
-    struct block *ret_jf;
-
-    ret_jt = new_block(BPF_RET | BPF_K, 1); 
-    ret_jf = new_block(BPF_RET | BPF_K, 0);
-
-    struct block *curr = b; 
-    while(curr->jt || curr->jf)
-    {
-        if(!curr->sense)
-        {
-            curr = curr->jt;
-        }
-        else
-        {
-            curr = curr->jf;
-        }
-    }
-
-    if(!curr->sense)
-    {
-        curr->jt = ret_jt; 
-        curr->jf = ret_jf; 
-    }
-    else
-    {
-        curr->jt = ret_jf; 
-        curr->jf = ret_jt; 
-    }
 
     return b;
 }
@@ -222,13 +185,19 @@ struct block* gen_linktype(uint32_t ethertype)
     return b;
 }
 
-struct block* gen_port(uint32_t type, uint32_t k)
+struct block* gen_ip(uint32_t dir, uint32_t k)
+{
+    struct block* b = gen_cmp(ETHER_HEADER_OFFSET + dir, BPF_W, k);
+    return b;
+}
+
+struct block* gen_port(uint32_t dir, uint32_t k)
 {
     struct block *b; 
     struct slist *s; 
     // ldx 4*([14]&0xf)로 x register에 값을 먼저 로드
     s = gen_iphdrlen(); 
-    b = gen_cmp(type, BPF_H, k);
+    b = gen_cmp(dir, BPF_H, k);
     // s instruction이 해당 블럭에서 가장먼저 실행되어야 해서 기존 블럭의 stmts에 가장 앞에 설정
     struct slist *result_s = sappend(b->stmts, s, FIRST);
     b->stmts = result_s;

@@ -62,7 +62,7 @@
 #define IS_RET(code) ((code) && (BPF_RET | BPF_K))
 
 #define ETHER_HEADER_OFFSET 0 
-#define IP_HEADER_OFFSET 12
+#define IP_HEADER_OFFSET 14
 
 #define Q_DEFAULT 0
 
@@ -74,6 +74,9 @@
 
 #define SRC_PORT_OFFSET 14
 #define DST_PORT_OFFSET 16
+
+#define SRC_IP_OFFSET 12
+#define DST_IP_OFFSET 16
 
 /*
  * Macros for insn array initializers.
