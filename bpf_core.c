@@ -106,6 +106,11 @@ struct block* gen_cmp_gt(uint32_t offset, uint32_t size, uint32_t value, uint32_
     return gen_ncmp(BPF_JGT, offset, size, value, addr_mode);
 }
 
+struct block* gen_cmp_set(uint32_t offset, uint32_t size, uint32_t value, uint32_t addr_mode)
+{
+    return gen_ncmp(BPF_JSET, offset, size, value, addr_mode);
+}
+
 struct block* gen_ncmp(uint32_t jtype, uint32_t offset, uint32_t size, uint32_t value, uint32_t addr_mode)
 {
     struct slist *s; 
@@ -152,9 +157,10 @@ struct block* gen_proto_abbrev_internal(uint32_t proto)
 }
 
 // src, dst, all -> port or host
+// 그냥 tcp는 IP fragment 유무랑 상관없지만 port및 그 이상 확인할 떄는 필요함
 struct block* gen_dir_abbrev_internal(uint32_t proto, uint32_t dir, uint32_t selector, uint32_t k)
 {
-    struct block *b0, *b1;
+    struct block *b0, *b1, *b2;
     // protocol 관련 먼저 만들고
     b0 = gen_proto_abbrev_internal(proto);
 
@@ -170,7 +176,9 @@ struct block* gen_dir_abbrev_internal(uint32_t proto, uint32_t dir, uint32_t sel
 
         case PORT:
         {
-            b1 = gen_port(DIR_PORT(dir), k);
+            b1 = gen_cmp_set(ETHER_HEADER_OFFSET + IP_FRAGMENT_OFFSET, BPF_H, 0x1fff, BPF_ABS);
+            b2 = gen_port(DIR_PORT(dir), k);
+            gen_and(b1, b2);
             gen_and(b0, b1);
         }
         break;

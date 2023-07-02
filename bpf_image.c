@@ -154,6 +154,10 @@ void bpf_disassembly(struct stmt s)
             printf("jgt #0x%x\n", s.k);
             break; 
 
+        case BPF_JMP|BPF_JSET|BPF_K:
+            printf("jset #0x%x\n", s.k);
+            break;
+
         default:
             printf("None Exist Instruction.\n");
             break;

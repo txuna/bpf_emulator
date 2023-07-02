@@ -34,6 +34,7 @@ void gen_and(struct block *b0, struct block *b1);
 void gen_or(struct block *b0, struct block *b1);
 struct block* gen_cmp(uint32_t offset, uint32_t size, uint32_t value, uint32_t addr_mode);
 struct block* gen_cmp_gt(uint32_t offset, uint32_t size, uint32_t value, uint32_t addr_mode);
+struct block* gen_cmp_set(uint32_t offset, uint32_t size, uint32_t value, uint32_t addr_mode);
 struct block* gen_ncmp(uint32_t jtype, uint32_t offset, uint32_t size, uint32_t value, uint32_t addr_mode);
 struct block* gen_proto_abbrev_internal(uint32_t proto);
 struct block* gen_dir_abbrev_internal(uint32_t proto, uint32_t dir, uint32_t selector, uint32_t k);
