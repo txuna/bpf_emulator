@@ -66,12 +66,17 @@
 
 #define Q_DEFAULT 0
 
+#define I_TYPE 14 
+#define I_CODE 15
+
 #define Q_ICMP 0x1
 #define Q_TCP 0x6 
 #define Q_UDP 0x11 
 #define ETHERTYPE_IP 0x800 
 #define ETHERTYPE_ARP 0x806
 
+// IP_HEADER_OFFSET + IP HEADER LEN 기준
+// IP HEADER LEN은 x register에 들어가 있으므로 생략
 #define SRC_PORT_OFFSET 14
 #define DST_PORT_OFFSET 16
 

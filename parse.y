@@ -22,9 +22,10 @@ static void yyerror(parser_state *p, const char* s);
 %token  T_HOST T_PORT
 %token T_AND T_OR T_NOT
 %token T_NEWLINE
+%token T_TYPE T_CODE 
 
-%type<val> protocol dir selector value
-%type<blk> pred expr state
+%type<val> protocol dir selector value icmp_field 
+%type<blk> pred expr state 
 
 %parse-param {parser_state* p}
 
@@ -80,11 +81,24 @@ pred : protocol
         if(check_protocol($1, $2, $3, $4) == 1)
         {
             yyerror(p, "None Expected selector\n");
-            YYERROR;
+            YYERROR; // throw error 
         }
         $$ = gen_dir_abbrev_internal($1, $2, $3, $4);
     }
+    | T_ICMP icmp_field value
+    {
+        $$ = gen_icmp_field($2, $3);
+    }
     ;
+
+icmp_field : T_TYPE 
+            {
+                $$ = I_TYPE;
+            }
+            | T_CODE
+            {
+                $$ = I_CODE;
+            }
     
 protocol : T_IP 
         {

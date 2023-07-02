@@ -62,6 +62,9 @@ static uint32_t ip_to_int(const char* ipAddress) {
 "or" {return T_OR;}
 "not" {return T_NOT;}
 
+"type" { return T_TYPE; }
+"code" { return T_CODE; }
+
 . {
     fprintf(stderr, "lexical error ('%s').\n", yytext); 
     exit(1);

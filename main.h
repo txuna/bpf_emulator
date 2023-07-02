@@ -43,6 +43,7 @@ struct block* gen_linktype(uint32_t ethertype);
 struct slist* gen_load_a(uint32_t offset, uint32_t size, uint32_t addr_mode);
 struct block* gen_host(uint32_t dir, uint32_t k);
 struct block* gen_port(uint32_t dir, uint32_t k);
+struct block* gen_icmp_field(int field, uint32_t k);
 
 struct slist* gen_iphdrlen();
 struct slist* gen_load_x(uint32_t offset, uint32_t size);

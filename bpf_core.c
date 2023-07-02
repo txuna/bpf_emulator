@@ -243,6 +243,29 @@ struct block* gen_port(uint32_t dir, uint32_t k)
     b->stmts = result_s;
 }
 
+// field is type or code
+// IP인지, non fragment인지
+struct block* gen_icmp_field(int field, uint32_t k)
+{
+    struct block *b1, *b2, *b3;
+    struct slist *s; 
+
+    b1 = gen_proto_abbrev_internal(Q_ICMP);
+    b2 = gen_cmp_set(ETHER_HEADER_OFFSET + IP_FRAGMENT_OFFSET, BPF_H, 0x1fff, BPF_ABS);
+    gen_and(b1, b2);
+    
+    s = gen_iphdrlen();   
+    b3 = gen_cmp(field, BPF_B, k, BPF_IND);
+    struct slist *result_s = sappend(b3->stmts, s, FIRST);
+    b3->stmts = result_s;
+
+    gen_and(b1, b3); 
+    
+
+   return b1; 
+}
+
+
 struct slist* gen_iphdrlen()
 {
     struct slist *s = gen_load_x(ETHER_HEADER_OFFSET + IP_HEADER_LEN_OFFSET, BPF_B);
@@ -318,7 +341,7 @@ int check_protocol(uint32_t proto, uint32_t dir, uint32_t selector, uint32_t k)
     }
 
     if(proto == Q_ICMP || proto == ETHERTYPE_IP)
-    {
+    {  
         if(selector != HOST)
         {
             return 1;

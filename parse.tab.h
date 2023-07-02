@@ -67,7 +67,9 @@ extern int yydebug;
     T_AND = 268,                   /* T_AND  */
     T_OR = 269,                    /* T_OR  */
     T_NOT = 270,                   /* T_NOT  */
-    T_NEWLINE = 271                /* T_NEWLINE  */
+    T_NEWLINE = 271,               /* T_NEWLINE  */
+    T_TYPE = 272,                  /* T_TYPE  */
+    T_CODE = 273                   /* T_CODE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -82,7 +84,7 @@ union YYSTYPE
     char *str;
     struct block *blk;
 
-#line 86 "parse.tab.h"
+#line 88 "parse.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
