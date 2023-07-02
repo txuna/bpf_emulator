@@ -1,8 +1,8 @@
 
 all: bpf
 
-bpf: lex.yy.o parse.tab.o main.o node.o bpf_core.o
-	gcc -o bpf -g lex.yy.o parse.tab.o main.o node.o bpf_core.o 
+bpf: lex.yy.o parse.tab.o main.o node.o bpf_core.o bpf_image.o
+	gcc -o bpf -g lex.yy.o parse.tab.o main.o node.o bpf_core.o bpf_image.o 
 
 main.o: main.h main.c 
 	gcc -c -o main.o main.c 
@@ -18,6 +18,9 @@ node.o : main.h node.c
 
 bpf_core.o : main.h bpf_core.c 
 	gcc -c -o bpf_core.o bpf_core.c 
+
+bpg_image.o : main.h bpg_image.c
+	gcc -c -o bpg_image.o bpf_image.c
 
 clean:
 	rm *.o bpf 
