@@ -10,23 +10,6 @@
 #define NONE 0
 
 
-// dir 
-#define SRC 1 
-#define DST 2 
-#define ALL 3 
-
-// selector 
-#define HOST 1
-#define PORT 2 
-
-#define AND 1 
-#define OR 2 
-#define NOT 3
-
-#define FIRST 1
-#define LAST 2
-
-
 typedef struct parser_state{
     struct block *blk;
 }parser_state;
@@ -42,20 +25,22 @@ int yyparse(parser_state*);
 int node_parse(const char*, parser_state*);
 char* concatenate_argv(int argc, char* argv[]);
 
+int check_protocol(uint32_t proto, uint32_t dir, uint32_t selector, uint32_t k);
 
 struct block* new_block(uint32_t code, uint32_t k);
 struct slist* new_stmt(uint32_t code, uint32_t k);
 void gen_not(struct block *b);
 void gen_and(struct block *b0, struct block *b1);
 void gen_or(struct block *b0, struct block *b1);
-struct block* gen_cmp(uint32_t offset, uint32_t size, uint32_t value);
-struct block* gen_cmp_gt(uint32_t offset, uint32_t size, uint32_t value);
-struct block* gen_ncmp(uint32_t jtype, uint32_t offset, uint32_t size, uint32_t value);
+struct block* gen_cmp(uint32_t offset, uint32_t size, uint32_t value, uint32_t addr_mode);
+struct block* gen_cmp_gt(uint32_t offset, uint32_t size, uint32_t value, uint32_t addr_mode);
+struct block* gen_ncmp(uint32_t jtype, uint32_t offset, uint32_t size, uint32_t value, uint32_t addr_mode);
 struct block* gen_proto_abbrev_internal(uint32_t proto);
+struct block* gen_dir_abbrev_internal(uint32_t proto, uint32_t dir, uint32_t selector, uint32_t k);
 struct block* gen_proto(uint32_t v, uint32_t proto);
 struct block* gen_linktype(uint32_t ethertype);
-struct slist* gen_load_a(uint32_t offset, uint32_t size);
-struct block* gen_ip(uint32_t dir, uint32_t k);
+struct slist* gen_load_a(uint32_t offset, uint32_t size, uint32_t addr_mode);
+struct block* gen_host(uint32_t dir, uint32_t k);
 struct block* gen_port(uint32_t dir, uint32_t k);
 
 struct slist* gen_iphdrlen();
@@ -66,4 +51,7 @@ void bpf_dump(struct block *b);
 void bpf_disassembly(struct stmt s);
 void free_bpf_block(struct block *blk);
 
+// 에뮬레이팅과정 리틀엔디안, 빅엔디안 계산필수
+
 #endif
+

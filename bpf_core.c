@@ -96,22 +96,22 @@ offset : packet offset
 size : load byte size (word, half word, byte)
 value : compare value
 */
-struct block* gen_cmp(uint32_t offset, uint32_t size, uint32_t value)
+struct block* gen_cmp(uint32_t offset, uint32_t size, uint32_t value, uint32_t addr_mode)
 {
-    return gen_ncmp(BPF_JEQ, offset, size, value);
+    return gen_ncmp(BPF_JEQ, offset, size, value, addr_mode);
 }
 
-struct block* gen_cmp_gt(uint32_t offset, uint32_t size, uint32_t value)
+struct block* gen_cmp_gt(uint32_t offset, uint32_t size, uint32_t value, uint32_t addr_mode)
 {
-    return gen_ncmp(BPF_JGT, offset, size, value);
+    return gen_ncmp(BPF_JGT, offset, size, value, addr_mode);
 }
 
-struct block* gen_ncmp(uint32_t jtype, uint32_t offset, uint32_t size, uint32_t value)
+struct block* gen_ncmp(uint32_t jtype, uint32_t offset, uint32_t size, uint32_t value, uint32_t addr_mode)
 {
     struct slist *s; 
     struct block *b; 
 
-    s = gen_load_a(offset, size);
+    s = gen_load_a(offset, size, addr_mode);
     b = new_block(JMP(jtype), value);
     b->stmts = s; 
 
@@ -151,6 +151,37 @@ struct block* gen_proto_abbrev_internal(uint32_t proto)
     return b0;
 }
 
+// src, dst, all -> port or host
+struct block* gen_dir_abbrev_internal(uint32_t proto, uint32_t dir, uint32_t selector, uint32_t k)
+{
+    struct block *b0, *b1;
+    // protocol 관련 먼저 만들고
+    b0 = gen_proto_abbrev_internal(proto);
+
+    // dir와 selector 만들기 
+    switch(selector)
+    {
+        case HOST:
+        {
+            b1 = gen_host(DIR_IP(dir), k);
+            gen_and(b0, b1);
+        }
+        break; 
+
+        case PORT:
+        {
+            b1 = gen_port(DIR_PORT(dir), k);
+            gen_and(b0, b1);
+        }
+        break;
+
+        default:
+            break; 
+    }
+
+    return b0;
+}
+
 
 struct block* gen_proto(uint32_t v, uint32_t proto)
 {
@@ -162,7 +193,7 @@ struct block* gen_proto(uint32_t v, uint32_t proto)
         case ETHERTYPE_IP:
             // fragment 0만
             b0 = gen_linktype(proto);
-            b1 = gen_cmp(IP_HEADER_OFFSET + IP_PROTOCOL_OFFSET, BPF_B, v);
+            b1 = gen_cmp(IP_HEADER_OFFSET + IP_PROTOCOL_OFFSET, BPF_B, v, BPF_ABS);
             gen_and(b0, b1);
             break;
 
@@ -181,13 +212,13 @@ struct block* gen_linktype(uint32_t ethertype)
     // ldh [12]하는 slist만들고 
     // gen_cmp해서 나온것에 넣기
     // ldh밖에 없어서 gen_cmp로만 충분할듯
-    struct block *b = gen_cmp(ETHER_HEADER_OFFSET + ETHERTYPE_OFFSET, BPF_H, ethertype);
+    struct block *b = gen_cmp(ETHER_HEADER_OFFSET + ETHERTYPE_OFFSET, BPF_H, ethertype, BPF_ABS);
     return b;
 }
 
-struct block* gen_ip(uint32_t dir, uint32_t k)
+struct block* gen_host(uint32_t dir, uint32_t k)
 {
-    struct block* b = gen_cmp(ETHER_HEADER_OFFSET + dir, BPF_W, k);
+    struct block* b = gen_cmp(IP_HEADER_OFFSET + dir, BPF_W, k, BPF_ABS);
     return b;
 }
 
@@ -197,7 +228,8 @@ struct block* gen_port(uint32_t dir, uint32_t k)
     struct slist *s; 
     // ldx 4*([14]&0xf)로 x register에 값을 먼저 로드
     s = gen_iphdrlen(); 
-    b = gen_cmp(dir, BPF_H, k);
+
+    b = gen_cmp(dir, BPF_H, k, BPF_IND);
     // s instruction이 해당 블럭에서 가장먼저 실행되어야 해서 기존 블럭의 stmts에 가장 앞에 설정
     struct slist *result_s = sappend(b->stmts, s, FIRST);
     b->stmts = result_s;
@@ -211,11 +243,11 @@ struct slist* gen_iphdrlen()
 
 
 // jmp를 위해서는 accumulator에 값을 로드해야됌
-struct slist* gen_load_a(uint32_t offset, uint32_t size)
+struct slist* gen_load_a(uint32_t offset, uint32_t size, uint32_t addr_mode)
 {
     struct slist *s1;
 
-    s1 = new_stmt(BPF_LD | BPF_ABS | size, offset); 
+    s1 = new_stmt(BPF_LD | addr_mode | size, offset); 
 
     return s1;
 }
@@ -284,6 +316,38 @@ void bpf_disassembly(struct stmt s)
             printf("ldb [%d]\n", s.k);
             break; 
 
+        case BPF_LD | BPF_W | BPF_IND:
+            printf("ld [x + %d]\n", s.k);
+            break; 
+
+        case BPF_LD | BPF_H | BPF_IND:
+            printf("ldh [x + %d]\n", s.k);
+            break; 
+
+        case BPF_LD | BPF_B | BPF_IND:
+            printf("ldb [x + %d]\n", s.k);
+            break; 
+
+        case BPF_LD | BPF_IMM:
+            printf("ld #0x%x\n", s.k);
+            break; 
+
+        case BPF_LDX | BPF_IMM:
+            printf("ldx #0x%x\n", s.k);
+            break; 
+
+        case BPF_LDX | BPF_MSH | BPF_B:
+            printf("ldxb 4*([%d]&0xf)\n", s.k);
+            break; 
+
+        case BPF_LD|BPF_MEM:
+            printf("ld M[%d]\n", s.k);
+            break; 
+
+        case BPF_LDX|BPF_MEM:
+            printf("ldx M[%d]\n", s.k);
+            break; 
+
         case BPF_RET | BPF_K:
             printf("ret #0x%x\n", s.k);
             break;
@@ -324,4 +388,24 @@ void free_bpf_block(struct block *blk)
     }
     free(blk);
     return;
+}
+
+
+// selector가 proto에 맞는지 확인
+int check_protocol(uint32_t proto, uint32_t dir, uint32_t selector, uint32_t k)
+{
+    if(proto == ETHERTYPE_ARP)
+    {
+        return 1;
+    }
+
+    if(proto == Q_ICMP || proto == ETHERTYPE_IP)
+    {
+        if(selector != HOST)
+        {
+            return 1;
+        }
+    }
+
+    return 0;
 }

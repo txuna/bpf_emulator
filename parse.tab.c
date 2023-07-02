@@ -130,7 +130,10 @@ enum yysymbol_kind_t
   YYSYMBOL_state = 20,                     /* state  */
   YYSYMBOL_expr = 21,                      /* expr  */
   YYSYMBOL_pred = 22,                      /* pred  */
-  YYSYMBOL_protocol = 23                   /* protocol  */
+  YYSYMBOL_protocol = 23,                  /* protocol  */
+  YYSYMBOL_dir = 24,                       /* dir  */
+  YYSYMBOL_selector = 25,                  /* selector  */
+  YYSYMBOL_value = 26                      /* value  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -140,7 +143,7 @@ typedef enum yysymbol_kind_t yysymbol_kind_t;
 
 int yylex();
 
-#line 144 "parse.tab.c"
+#line 147 "parse.tab.c"
 
 
 #ifdef short
@@ -464,16 +467,16 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  14
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   17
+#define YYLAST   21
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  19
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  5
+#define YYNNTS  8
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  13
+#define YYNRULES  19
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  20
+#define YYNSTATES  28
 
 /* YYMAXUTOK -- Last valid token kind.  */
 #define YYMAXUTOK   271
@@ -522,10 +525,10 @@ static const yytype_int8 yytranslate[] =
 
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
-static const yytype_int8 yyrline[] =
+static const yytype_uint8 yyrline[] =
 {
-       0,    42,    42,    49,    53,    58,    63,    68,    74,    86,
-      90,    94,    98,   102
+       0,    42,    42,    49,    53,    58,    63,    68,    74,    78,
+      89,    93,    97,   101,   105,   110,   114,   120,   124,   131
 };
 #endif
 
@@ -544,7 +547,7 @@ static const char *const yytname[] =
   "\"end of file\"", "error", "\"invalid token\"", "T_UINT", "T_IP",
   "T_ICMP", "T_UDP", "T_TCP", "T_ARP", "T_SRC", "T_DST", "T_HOST",
   "T_PORT", "T_AND", "T_OR", "T_NOT", "T_NEWLINE", "'('", "')'", "$accept",
-  "state", "expr", "pred", "protocol", YY_NULLPTR
+  "state", "expr", "pred", "protocol", "dir", "selector", "value", YY_NULLPTR
 };
 
 static const char *
@@ -568,8 +571,9 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-      -4,    -7,    -7,    -7,    -7,    -7,    -4,    -4,     9,     3,
-      -7,    -7,    -7,    -6,    -7,    -4,    -4,    -7,    -7,    -7
+      -4,    -7,    -7,    -7,    -7,    -7,    -4,    -4,    20,     3,
+      -7,     0,    -7,    -6,    -7,    -4,    -4,    -7,    -7,     7,
+      -7,    -7,    -7,    -7,    -7,    18,    -7,    -7
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -577,20 +581,21 @@ static const yytype_int8 yypact[] =
    means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
-       0,     9,    13,    11,    10,    12,     0,     0,     0,     2,
-       3,     8,     6,     0,     1,     0,     0,     7,     4,     5
+       0,    10,    14,    12,    11,    13,     0,     0,     0,     2,
+       3,     8,     6,     0,     1,     0,     0,    15,    16,     0,
+       7,     4,     5,    17,    18,     0,    19,     9
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-      -7,    -7,    -1,    -7,    -7
+      -7,    -7,    -1,    -7,    -7,    -7,    -7,    -7
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-       0,     8,     9,    10,    11
+       0,     8,     9,    10,    11,    19,    25,    27
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -598,14 +603,16 @@ static const yytype_int8 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-       1,     2,     3,     4,     5,    12,    13,    15,    16,    14,
-       0,     6,    17,     7,    18,    19,    15,    16
+       1,     2,     3,     4,     5,    12,    13,    15,    16,    17,
+      18,     6,    20,     7,    21,    22,    15,    16,    23,    24,
+      14,    26
 };
 
 static const yytype_int8 yycheck[] =
 {
-       4,     5,     6,     7,     8,     6,     7,    13,    14,     0,
-      -1,    15,    18,    17,    15,    16,    13,    14
+       4,     5,     6,     7,     8,     6,     7,    13,    14,     9,
+      10,    15,    18,    17,    15,    16,    13,    14,    11,    12,
+       0,     3
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
@@ -613,21 +620,22 @@ static const yytype_int8 yycheck[] =
 static const yytype_int8 yystos[] =
 {
        0,     4,     5,     6,     7,     8,    15,    17,    20,    21,
-      22,    23,    21,    21,     0,    13,    14,    18,    21,    21
+      22,    23,    21,    21,     0,    13,    14,     9,    10,    24,
+      18,    21,    21,    11,    12,    25,     3,    26
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    19,    20,    21,    21,    21,    21,    21,    22,    23,
-      23,    23,    23,    23
+       0,    19,    20,    21,    21,    21,    21,    21,    22,    22,
+      23,    23,    23,    23,    23,    24,    24,    25,    25,    26
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr2[] =
 {
-       0,     2,     1,     1,     3,     3,     2,     3,     1,     1,
-       1,     1,     1,     1
+       0,     2,     1,     1,     3,     3,     2,     3,     1,     4,
+       1,     1,     1,     1,     1,     1,     1,     1,     1,     1
 };
 
 
@@ -1098,7 +1106,7 @@ yyreduce:
         // sense값 따라 쭉 이동하면서 마지막에 ret 2개 붙이기
         p->blk = (yyvsp[0].blk); //gen_ret($1);
     }
-#line 1102 "parse.tab.c"
+#line 1110 "parse.tab.c"
     break;
 
   case 3: /* expr: pred  */
@@ -1106,7 +1114,7 @@ yyreduce:
     {
         (yyval.blk) = (yyvsp[0].blk);
     }
-#line 1110 "parse.tab.c"
+#line 1118 "parse.tab.c"
     break;
 
   case 4: /* expr: expr T_AND expr  */
@@ -1115,7 +1123,7 @@ yyreduce:
         gen_and((yyvsp[-2].blk), (yyvsp[0].blk));
         (yyval.blk) = (yyvsp[-2].blk);
     }
-#line 1119 "parse.tab.c"
+#line 1127 "parse.tab.c"
     break;
 
   case 5: /* expr: expr T_OR expr  */
@@ -1124,7 +1132,7 @@ yyreduce:
         gen_or((yyvsp[-2].blk), (yyvsp[0].blk));
         (yyval.blk) = (yyvsp[-2].blk); 
     }
-#line 1128 "parse.tab.c"
+#line 1136 "parse.tab.c"
     break;
 
   case 6: /* expr: T_NOT expr  */
@@ -1133,7 +1141,7 @@ yyreduce:
         gen_not((yyvsp[0].blk));
         (yyval.blk) = (yyvsp[0].blk);
     }
-#line 1137 "parse.tab.c"
+#line 1145 "parse.tab.c"
     break;
 
   case 7: /* expr: '(' expr ')'  */
@@ -1141,7 +1149,7 @@ yyreduce:
     {
         (yyval.blk) = (yyvsp[-1].blk);
     }
-#line 1145 "parse.tab.c"
+#line 1153 "parse.tab.c"
     break;
 
   case 8: /* pred: protocol  */
@@ -1149,51 +1157,104 @@ yyreduce:
     {
         (yyval.blk) = gen_proto_abbrev_internal((yyvsp[0].val));
     }
-#line 1153 "parse.tab.c"
-    break;
-
-  case 9: /* protocol: T_IP  */
-#line 87 "parse.y"
-        {
-            (yyval.val) = ETHERTYPE_IP;
-        }
 #line 1161 "parse.tab.c"
     break;
 
-  case 10: /* protocol: T_TCP  */
-#line 91 "parse.y"
+  case 9: /* pred: protocol dir selector value  */
+#line 79 "parse.y"
+    {
+        if(check_protocol((yyvsp[-3].val), (yyvsp[-2].val), (yyvsp[-1].val), (yyvsp[0].val)) == 1)
+        {
+            yyerror(p, "None Expected selector\n");
+            YYERROR;
+        }
+        (yyval.blk) = gen_dir_abbrev_internal((yyvsp[-3].val), (yyvsp[-2].val), (yyvsp[-1].val), (yyvsp[0].val));
+    }
+#line 1174 "parse.tab.c"
+    break;
+
+  case 10: /* protocol: T_IP  */
+#line 90 "parse.y"
+        {
+            (yyval.val) = ETHERTYPE_IP;
+        }
+#line 1182 "parse.tab.c"
+    break;
+
+  case 11: /* protocol: T_TCP  */
+#line 94 "parse.y"
         {
             (yyval.val) = Q_TCP;
         }
-#line 1169 "parse.tab.c"
+#line 1190 "parse.tab.c"
     break;
 
-  case 11: /* protocol: T_UDP  */
-#line 95 "parse.y"
+  case 12: /* protocol: T_UDP  */
+#line 98 "parse.y"
         {
             (yyval.val) = Q_UDP;
         }
-#line 1177 "parse.tab.c"
+#line 1198 "parse.tab.c"
     break;
 
-  case 12: /* protocol: T_ARP  */
-#line 99 "parse.y"
+  case 13: /* protocol: T_ARP  */
+#line 102 "parse.y"
         {
             (yyval.val) = ETHERTYPE_ARP;
         }
-#line 1185 "parse.tab.c"
+#line 1206 "parse.tab.c"
     break;
 
-  case 13: /* protocol: T_ICMP  */
-#line 103 "parse.y"
+  case 14: /* protocol: T_ICMP  */
+#line 106 "parse.y"
         {
             (yyval.val) = Q_ICMP;
         }
-#line 1193 "parse.tab.c"
+#line 1214 "parse.tab.c"
+    break;
+
+  case 15: /* dir: T_SRC  */
+#line 111 "parse.y"
+    {
+        (yyval.val) = SRC;
+    }
+#line 1222 "parse.tab.c"
+    break;
+
+  case 16: /* dir: T_DST  */
+#line 115 "parse.y"
+    {
+        (yyval.val) = DST;
+    }
+#line 1230 "parse.tab.c"
+    break;
+
+  case 17: /* selector: T_HOST  */
+#line 121 "parse.y"
+        {
+            (yyval.val) = HOST;
+        }
+#line 1238 "parse.tab.c"
+    break;
+
+  case 18: /* selector: T_PORT  */
+#line 125 "parse.y"
+        {
+            (yyval.val) = PORT;
+        }
+#line 1246 "parse.tab.c"
+    break;
+
+  case 19: /* value: T_UINT  */
+#line 132 "parse.y"
+    {
+        (yyval.val) = (yyvsp[0].val);
+    }
+#line 1254 "parse.tab.c"
     break;
 
 
-#line 1197 "parse.tab.c"
+#line 1258 "parse.tab.c"
 
       default: break;
     }
@@ -1386,7 +1447,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 121 "parse.y"
+#line 137 "parse.y"
 
 
 void yyerror(struct parser_state *p, const char* s) {

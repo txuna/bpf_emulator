@@ -83,6 +83,25 @@
 
 #define IP_HEADER_LEN_OFFSET 14
 
+// dir 
+#define SRC 1
+#define DST 2 
+#define ALL 3 
+
+// selector 
+#define HOST 1
+#define PORT 2 
+
+#define AND 1 
+#define OR 2 
+#define NOT 3
+
+#define FIRST 1
+#define LAST 2
+
+#define DIR_IP(dir)	((dir == SRC) ? (SRC_IP_OFFSET) : (DST_IP_OFFSET))
+#define DIR_PORT(dir) ((dir == SRC) ? (SRC_PORT_OFFSET) : (DST_PORT_OFFSET))
+
 /*
  * Macros for insn array initializers.
  code들은 위의 매크로들과 | 연산해서 얻음 
