@@ -11,17 +11,19 @@ sh build.sh
 
 # EXAMPLE 
 ```shell
-➜  bpf git:(main) ✗ ./bpf ip src host 199.199.199.199 and tcp dst port 80
+➜  bpf git:(main) ./bpf ip src host 8.8.8.8 and tcp src port 80
 ldh [12]
 jeq #0x800
 ld [26]
-jeq #0xc7c7c7c7
+jeq #0x8080808
 ldh [12]
 jeq #0x800
 ldb [23]
 jeq #0x6
+ldh [20]
+jset #0x1fff
 ldxb 4*([14]&0xf)
-ldh [x + 16]
+ldh [x + 14]
 jeq #0x50
 ```
 then show bpf instruction!
