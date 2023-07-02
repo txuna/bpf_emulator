@@ -44,39 +44,33 @@ void gen_not(struct block *b)
 // sense값이 1이면 JF가 참 루트
 void gen_and(struct block *b0, struct block *b1)
 {
-    struct block *curr = b0;
-    while(curr->jt || curr->jf)
-    {
-        if(!curr->sense)
-        {
-            curr = curr->jt;
-        }
-        else
-        {
-            curr = curr->jf;
-        }
-    }
-    // and일 때는 sense값에 따라 true로 이어지는 구간에 연결해야 이전계산이 true일 때 확인해서 계산할 수 있게
-    if(!curr->sense)
-    {
-        curr->jt = b1;
-    }
-    else{
-        curr->jf = b1;
-    }
+    merge(b0, b1, 0);
 }
 
 void gen_or(struct block *b0, struct block *b1)
 {
+    merge(b0, b1, 1);
+}
+
+void merge(struct block *b0, struct block *b1, int type)
+{
     struct block *curr = b0;
-    while(curr->jt || curr->jf)
+    while(1)
     {
         if(!curr->sense)
         {
+            if(curr->jt == NULL)
+            {
+                break; 
+            }
             curr = curr->jt;
         }
         else
         {
+            if(curr->jf == NULL)
+            {
+                break;
+            }
             curr = curr->jf;
         }
     }
@@ -84,10 +78,15 @@ void gen_or(struct block *b0, struct block *b1)
     // false일 때만 연결해서 확인하게
     if(!curr->sense)
     {
-        curr->jf = b1;
+        curr->jt = b1;
     }
     else{
-        curr->jt = b1;
+        curr->jf = b1;
+    }
+
+    if(type == 1)
+    {
+        curr->sense = !curr->sense;
     }
 }
 

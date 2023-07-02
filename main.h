@@ -32,6 +32,8 @@ struct slist* new_stmt(uint32_t code, uint32_t k);
 void gen_not(struct block *b);
 void gen_and(struct block *b0, struct block *b1);
 void gen_or(struct block *b0, struct block *b1);
+void merge(struct block *b0, struct block *b1, int type);
+
 struct block* gen_cmp(uint32_t offset, uint32_t size, uint32_t value, uint32_t addr_mode);
 struct block* gen_cmp_gt(uint32_t offset, uint32_t size, uint32_t value, uint32_t addr_mode);
 struct block* gen_cmp_set(uint32_t offset, uint32_t size, uint32_t value, uint32_t addr_mode);
