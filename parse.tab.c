@@ -1165,7 +1165,7 @@ yyreduce:
   case 8: /* pred: protocol  */
 #line 76 "parse.y"
     {
-        (yyval.blk) = gen_proto_abbrev_internal((yyvsp[0].val));
+        (yyval.blk) = gen_proto_abbrev_internal(p, (yyvsp[0].val));
     }
 #line 1171 "parse.tab.c"
     break;
@@ -1173,12 +1173,12 @@ yyreduce:
   case 9: /* pred: protocol dir selector value  */
 #line 80 "parse.y"
     {
-        if(check_protocol((yyvsp[-3].val), (yyvsp[-2].val), (yyvsp[-1].val), (yyvsp[0].val)) == 1)
+        if(check_protocol(p, (yyvsp[-3].val), (yyvsp[-2].val), (yyvsp[-1].val), (yyvsp[0].val)) == 1)
         {
             yyerror(p, "None Expected selector\n");
             YYERROR; // throw error 
         }
-        (yyval.blk) = gen_dir_abbrev_internal((yyvsp[-3].val), (yyvsp[-2].val), (yyvsp[-1].val), (yyvsp[0].val));
+        (yyval.blk) = gen_dir_abbrev_internal(p, (yyvsp[-3].val), (yyvsp[-2].val), (yyvsp[-1].val), (yyvsp[0].val));
     }
 #line 1184 "parse.tab.c"
     break;
@@ -1186,7 +1186,7 @@ yyreduce:
   case 10: /* pred: T_ICMP icmp_field value  */
 #line 89 "parse.y"
     {
-        (yyval.blk) = gen_icmp_field((yyvsp[-1].val), (yyvsp[0].val));
+        (yyval.blk) = gen_icmp_field(p, (yyvsp[-1].val), (yyvsp[0].val));
     }
 #line 1192 "parse.tab.c"
     break;

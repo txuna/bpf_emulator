@@ -33,7 +33,7 @@ static void yyerror(parser_state *p, const char* s);
 int yylex();
 %}
 
-%left T_AND T_OR 
+%left T_OR T_AND
 %right T_NOT
 
 %start state
@@ -74,20 +74,20 @@ expr : pred
 
 pred : protocol 
     {
-        $$ = gen_proto_abbrev_internal($1);
+        $$ = gen_proto_abbrev_internal(p, $1);
     }
     | protocol dir selector value
     {
-        if(check_protocol($1, $2, $3, $4) == 1)
+        if(check_protocol(p, $1, $2, $3, $4) == 1)
         {
             yyerror(p, "None Expected selector\n");
             YYERROR; // throw error 
         }
-        $$ = gen_dir_abbrev_internal($1, $2, $3, $4);
+        $$ = gen_dir_abbrev_internal(p, $1, $2, $3, $4);
     }
     | T_ICMP icmp_field value
     {
-        $$ = gen_icmp_field($2, $3);
+        $$ = gen_icmp_field(p, $2, $3);
     }
     ;
 

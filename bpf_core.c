@@ -1,6 +1,22 @@
 #include "main.h"
 
-struct block* new_block(uint32_t code, uint32_t k)
+void finish_parse(parser_state *pstate, struct block *b)
+{
+    struct block *jt_ret, *jf_ret; 
+    jt_ret = gen_retblk(pstate, 1); 
+    jf_ret = gen_retblk(pstate, 0);
+
+
+}
+
+struct block* gen_retblk(parser_state *pstate, uint32_t k)
+{
+    struct block *b = new_block(pstate, BPF_RET | BPF_K, k);
+    b->s.k = k;
+    return b;
+}
+
+struct block* new_block(parser_state *pstate, uint32_t code, uint32_t k)
 {
     struct block *b = (struct block*)malloc(sizeof(struct block));
     if(b == NULL)
@@ -8,6 +24,8 @@ struct block* new_block(uint32_t code, uint32_t k)
         return NULL;
     }
 
+    pstate->chunks[pstate->chunk_id] = b;
+    pstate->chunk_id++;
     // 이 때 ret 코드를 만들어야 하나? 
     // 그리고 연결할때는 ret 코드 덮어쓰도록?
     b->jt = NULL; 
@@ -19,7 +37,7 @@ struct block* new_block(uint32_t code, uint32_t k)
     return b;
 }
 
-struct slist* new_stmt(uint32_t code, uint32_t k)
+struct slist* new_stmt(parser_state *pstate, uint32_t code, uint32_t k)
 {
     struct slist *s = (struct slist*)malloc(sizeof(struct slist));
     if(s == NULL)
@@ -51,6 +69,7 @@ void gen_or(struct block *b0, struct block *b1)
 {
     merge(b0, b1, 1);
 }
+
 
 void merge(struct block *b0, struct block *b1, int type)
 {
@@ -95,57 +114,57 @@ offset : packet offset
 size : load byte size (word, half word, byte)
 value : compare value
 */
-struct block* gen_cmp(uint32_t offset, uint32_t size, uint32_t value, uint32_t addr_mode)
+struct block* gen_cmp(parser_state *pstate, uint32_t offset, uint32_t size, uint32_t value, uint32_t addr_mode)
 {
-    return gen_ncmp(BPF_JEQ, offset, size, value, addr_mode);
+    return gen_ncmp(pstate, BPF_JEQ, offset, size, value, addr_mode);
 }
 
-struct block* gen_cmp_gt(uint32_t offset, uint32_t size, uint32_t value, uint32_t addr_mode)
+struct block* gen_cmp_gt(parser_state *pstate, uint32_t offset, uint32_t size, uint32_t value, uint32_t addr_mode)
 {
-    return gen_ncmp(BPF_JGT, offset, size, value, addr_mode);
+    return gen_ncmp(pstate, BPF_JGT, offset, size, value, addr_mode);
 }
 
-struct block* gen_cmp_set(uint32_t offset, uint32_t size, uint32_t value, uint32_t addr_mode)
+struct block* gen_cmp_set(parser_state *pstate, uint32_t offset, uint32_t size, uint32_t value, uint32_t addr_mode)
 {
-    return gen_ncmp(BPF_JSET, offset, size, value, addr_mode);
+    return gen_ncmp(pstate, BPF_JSET, offset, size, value, addr_mode);
 }
 
-struct block* gen_ncmp(uint32_t jtype, uint32_t offset, uint32_t size, uint32_t value, uint32_t addr_mode)
+struct block* gen_ncmp(parser_state *pstate, uint32_t jtype, uint32_t offset, uint32_t size, uint32_t value, uint32_t addr_mode)
 {
     struct slist *s; 
     struct block *b; 
 
-    s = gen_load_a(offset, size, addr_mode);
-    b = new_block(JMP(jtype), value);
+    s = gen_load_a(pstate, offset, size, addr_mode);
+    b = new_block(pstate, JMP(jtype), value);
     b->stmts = s; 
 
     return b;
 }
 
-struct block* gen_proto_abbrev_internal(uint32_t proto)
+struct block* gen_proto_abbrev_internal(parser_state *pstate, uint32_t proto)
 {
     struct block *b0;
 
     switch(proto)
     {
         case Q_TCP:
-            b0 = gen_proto(proto, ETHERTYPE_IP);
+            b0 = gen_proto(pstate, proto, ETHERTYPE_IP);
             break; 
 
         case Q_UDP:
-            b0 = gen_proto(proto, ETHERTYPE_IP);
+            b0 = gen_proto(pstate, proto, ETHERTYPE_IP);
             break; 
 
         case Q_ICMP:
-            b0 = gen_proto(proto, ETHERTYPE_IP);
+            b0 = gen_proto(pstate, proto, ETHERTYPE_IP);
             break;
 
         case ETHERTYPE_IP:
-            b0 = gen_linktype(proto);
+            b0 = gen_linktype(pstate, proto);
             break;
 
         case ETHERTYPE_ARP:
-            b0 = gen_linktype(proto);
+            b0 = gen_linktype(pstate, proto);
             break;
 
         default:
@@ -157,26 +176,26 @@ struct block* gen_proto_abbrev_internal(uint32_t proto)
 
 // src, dst, all -> port or host
 // 그냥 tcp는 IP fragment 유무랑 상관없지만 port및 그 이상 확인할 떄는 필요함
-struct block* gen_dir_abbrev_internal(uint32_t proto, uint32_t dir, uint32_t selector, uint32_t k)
+struct block* gen_dir_abbrev_internal(parser_state *pstate, uint32_t proto, uint32_t dir, uint32_t selector, uint32_t k)
 {
     struct block *b0, *b1, *b2;
     // protocol 관련 먼저 만들고
-    b0 = gen_proto_abbrev_internal(proto);
+    b0 = gen_proto_abbrev_internal(pstate, proto);
 
     // dir와 selector 만들기 
     switch(selector)
     {
         case HOST:
         {
-            b1 = gen_host(DIR_IP(dir), k);
+            b1 = gen_host(pstate, DIR_IP(dir), k);
             gen_and(b0, b1);
         }
         break; 
 
         case PORT:
         {
-            b1 = gen_cmp_set(ETHER_HEADER_OFFSET + IP_FRAGMENT_OFFSET, BPF_H, 0x1fff, BPF_ABS);
-            b2 = gen_port(DIR_PORT(dir), k);
+            b1 = gen_cmp_set(pstate, ETHER_HEADER_OFFSET + IP_FRAGMENT_OFFSET, BPF_H, 0x1fff, BPF_ABS);
+            b2 = gen_port(pstate, DIR_PORT(dir), k);
             gen_and(b1, b2);
             gen_and(b0, b1);
         }
@@ -190,7 +209,7 @@ struct block* gen_dir_abbrev_internal(uint32_t proto, uint32_t dir, uint32_t sel
 }
 
 
-struct block* gen_proto(uint32_t v, uint32_t proto)
+struct block* gen_proto(parser_state *pstate, uint32_t v, uint32_t proto)
 {
     struct block *b0, *b1; 
     struct block *b2;
@@ -199,8 +218,8 @@ struct block* gen_proto(uint32_t v, uint32_t proto)
     {
         case ETHERTYPE_IP:
             // fragment 0만
-            b0 = gen_linktype(proto);
-            b1 = gen_cmp(IP_HEADER_OFFSET + IP_PROTOCOL_OFFSET, BPF_B, v, BPF_ABS);
+            b0 = gen_linktype(pstate, proto);
+            b1 = gen_cmp(pstate, IP_HEADER_OFFSET + IP_PROTOCOL_OFFSET, BPF_B, v, BPF_ABS);
             gen_and(b0, b1);
             break;
 
@@ -214,29 +233,29 @@ struct block* gen_proto(uint32_t v, uint32_t proto)
 // 주어진 링크계층 프로토콜이 맞는지 확인하는 블럭
 // ldh [12]
 // jeq ETHERTYPE
-struct block* gen_linktype(uint32_t ethertype)
+struct block* gen_linktype(parser_state *pstate, uint32_t ethertype)
 {
     // ldh [12]하는 slist만들고 
     // gen_cmp해서 나온것에 넣기
     // ldh밖에 없어서 gen_cmp로만 충분할듯
-    struct block *b = gen_cmp(ETHER_HEADER_OFFSET + ETHERTYPE_OFFSET, BPF_H, ethertype, BPF_ABS);
+    struct block *b = gen_cmp(pstate, ETHER_HEADER_OFFSET + ETHERTYPE_OFFSET, BPF_H, ethertype, BPF_ABS);
     return b;
 }
 
-struct block* gen_host(uint32_t dir, uint32_t k)
+struct block* gen_host(parser_state *pstate, uint32_t dir, uint32_t k)
 {
-    struct block* b = gen_cmp(IP_HEADER_OFFSET + dir, BPF_W, k, BPF_ABS);
+    struct block* b = gen_cmp(pstate, IP_HEADER_OFFSET + dir, BPF_W, k, BPF_ABS);
     return b;
 }
 
-struct block* gen_port(uint32_t dir, uint32_t k)
+struct block* gen_port(parser_state *pstate, uint32_t dir, uint32_t k)
 {
     struct block *b; 
     struct slist *s; 
     // ldx 4*([14]&0xf)로 x register에 값을 먼저 로드
-    s = gen_iphdrlen(); 
+    s = gen_iphdrlen(pstate); 
 
-    b = gen_cmp(dir, BPF_H, k, BPF_IND);
+    b = gen_cmp(pstate, dir, BPF_H, k, BPF_IND);
     // s instruction이 해당 블럭에서 가장먼저 실행되어야 해서 기존 블럭의 stmts에 가장 앞에 설정
     struct slist *result_s = sappend(b->stmts, s, FIRST);
     b->stmts = result_s;
@@ -244,17 +263,17 @@ struct block* gen_port(uint32_t dir, uint32_t k)
 
 // field is type or code
 // IP인지, non fragment인지
-struct block* gen_icmp_field(int field, uint32_t k)
+struct block* gen_icmp_field(parser_state *pstate, int field, uint32_t k)
 {
     struct block *b1, *b2, *b3;
     struct slist *s; 
 
-    b1 = gen_proto_abbrev_internal(Q_ICMP);
-    b2 = gen_cmp_set(ETHER_HEADER_OFFSET + IP_FRAGMENT_OFFSET, BPF_H, 0x1fff, BPF_ABS);
+    b1 = gen_proto_abbrev_internal(pstate, Q_ICMP);
+    b2 = gen_cmp_set(pstate, ETHER_HEADER_OFFSET + IP_FRAGMENT_OFFSET, BPF_H, 0x1fff, BPF_ABS);
     gen_and(b1, b2);
     
-    s = gen_iphdrlen();   
-    b3 = gen_cmp(field, BPF_B, k, BPF_IND);
+    s = gen_iphdrlen(pstate);   
+    b3 = gen_cmp(pstate, field, BPF_B, k, BPF_IND);
     struct slist *result_s = sappend(b3->stmts, s, FIRST);
     b3->stmts = result_s;
 
@@ -265,27 +284,27 @@ struct block* gen_icmp_field(int field, uint32_t k)
 }
 
 
-struct slist* gen_iphdrlen()
+struct slist* gen_iphdrlen(parser_state *pstate)
 {
-    struct slist *s = gen_load_x(ETHER_HEADER_OFFSET + IP_HEADER_LEN_OFFSET, BPF_B);
+    struct slist *s = gen_load_x(pstate, ETHER_HEADER_OFFSET + IP_HEADER_LEN_OFFSET, BPF_B);
     return s;
 }
 
 
 // jmp를 위해서는 accumulator에 값을 로드해야됌
-struct slist* gen_load_a(uint32_t offset, uint32_t size, uint32_t addr_mode)
+struct slist* gen_load_a(parser_state *pstate, uint32_t offset, uint32_t size, uint32_t addr_mode)
 {
     struct slist *s1;
 
-    s1 = new_stmt(BPF_LD | addr_mode | size, offset); 
+    s1 = new_stmt(pstate, BPF_LD | addr_mode | size, offset); 
 
     return s1;
 }
 
-struct slist* gen_load_x(uint32_t offset, uint32_t size)
+struct slist* gen_load_x(parser_state *pstate, uint32_t offset, uint32_t size)
 {
     struct slist *s1; 
-    s1 = new_stmt(BPF_LDX | BPF_MSH | size, offset);
+    s1 = new_stmt(pstate, BPF_LDX | BPF_MSH | size, offset);
     return s1;
 }
 
@@ -308,31 +327,29 @@ struct slist* sappend(struct slist* s0, struct slist* s1, int type)
     }
 }
 
-void free_bpf_block(struct block *blk)
+void free_bpf_block(parser_state *pstate)
 {
-    if(blk == NULL)
+    struct block *b; 
+    struct slist *s, *prev; 
+    for(int i=0; i < pstate->chunk_id; i++)
     {
-        return;
+        b = pstate->chunks[i];
+        s = b->stmts;
+        while(s)
+        {
+            prev = s; 
+            s = s->next;
+            free(prev);
+        }
+        free(b);
     }
 
-    free_bpf_block(blk->jt);
-    free_bpf_block(blk->jf);
-
-    // stmts 먼저 free.
-    struct slist *cur = blk->stmts; 
-    while(cur)
-    {
-        struct slist* prev = cur; 
-        cur = cur->next;
-        free(prev);
-    }
-    free(blk);
     return;
 }
 
 
 // selector가 proto에 맞는지 확인
-int check_protocol(uint32_t proto, uint32_t dir, uint32_t selector, uint32_t k)
+int check_protocol(parser_state *pstate, uint32_t proto, uint32_t dir, uint32_t selector, uint32_t k)
 {
     if(proto == ETHERTYPE_ARP)
     {

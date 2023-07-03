@@ -17,7 +17,9 @@ void bpf_dump(struct block *b)
     }
     bpf_disassembly(b->s);
     bpf_dump(b->jt);
+    // 이때 b의 sense값이 1이면 jt에 ret 0 블럭, 0이라면 ret k 블럭 
     bpf_dump(b->jf);
+    // 이때 b의 sense값이 0이면 jt에 ret 0 블럭, 1이라면 ret k 블럭 
 
     return;
 }

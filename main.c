@@ -9,6 +9,7 @@ int main(int argc, char **argv)
 
     char *command = concatenate_argv(argc, argv);
     parser_state p;
+    memset(&p, 0, sizeof(parser_state));
 
     int ret = node_parse(command, &p);
     if(ret != 0)
@@ -17,7 +18,7 @@ int main(int argc, char **argv)
         return 1; 
     }
     bpf_dump(p.blk);
-    free_bpf_block(p.blk);
+    free_bpf_block(&p);
     free(command);
     return 0;
 }
