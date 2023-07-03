@@ -119,6 +119,7 @@
 #define BPF_STMT(code, k) { (u_short)(code), 0, 0, k }
 #define BPF_JUMP(code, k, jt, jf) { (u_short)(code), jt, jf, k }
 
+#define CHUNK_NUM 1024
 
 /*
 BPF_CLASS | BPF_SIZE | BPF_MODE
@@ -181,7 +182,8 @@ BPF_ALU+BPF_NEG	      A	<- -A
 */
 
 struct bpf_insn {
-	uint16_t	code;
+	int ins_offset;
+	uint16_t code;
 	uint8_t	jt;
 	uint8_t	jf;
 	uint32_t k;
@@ -189,7 +191,7 @@ struct bpf_insn {
 
 struct sock_fprog{
     int len; 
-	struct bpf_insn *bpf;
+	struct bpf_insn bpf[CHUNK_NUM];
 };
 
 /*

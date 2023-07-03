@@ -1,8 +1,50 @@
 #include "main.h"
 
-void gen_bpf_insn()
+//block의 s부분 체킹 시 sense값에 따라 jt jf의 stmt list의 첫번째 s의 offset look ahead하기
+void gen_bpf_insn(parser_state *pstate)
 {
+    struct block *b;
+    int index = 0;
+    for(int i=0; i<pstate->chunk_id; i++)
+    {
+        b = pstate->chunks[i];
+        struct slist *list = b->stmts; 
+        while(list)
+        {
+            struct bpf_insn ins = {list->s.offset, list->s.code, 0, 0, list->s.k};
+            pstate->prog.bpf[index] = ins;
+            index += 1;
+            list = list->next;
+        }
 
+        if(b->s.code == (BPF_RET | BPF_K))
+        {
+            struct bpf_insn ins = {b->s.offset, b->s.code, 0, 0, b->s.k};
+            pstate->prog.bpf[index] = ins;
+            index += 1;
+            continue; 
+        }
+
+        struct block *jt, *jf;
+
+        if(!b->sense)
+        {
+            jt = b->jt; 
+            jf = b->jf; 
+        }
+        else
+        {
+            jt = b->jf; 
+            jf = b->jt;
+        }
+
+        struct bpf_insn ins = {b->s.offset, b->s.code, jt->s.offset, jf->s.offset, b->s.k};
+        pstate->prog.bpf[index] = ins;
+        index += 1;
+    }
+    
+    pstate->prog.len = index;
+    return;
 }
 
 void set_offset_cfg(parser_state *pstate)
@@ -23,6 +65,9 @@ void set_offset_cfg(parser_state *pstate)
         b->s.offset = offset;
         offset += 1;
     }
+
+    // 전체 instruction의 갯수
+    pstate->insn_num = offset;
 
     return;
 }
@@ -67,7 +112,6 @@ void finish_parse(parser_state *pstate)
     }
 
     set_offset_cfg(pstate);
-
     return;
 }
 
@@ -85,7 +129,6 @@ struct block* new_block(parser_state *pstate, uint32_t code, uint32_t k)
     {
         return NULL;
     }
-
     pstate->chunks[pstate->chunk_id] = b;
     pstate->chunk_id++;
     // 이 때 ret 코드를 만들어야 하나? 
@@ -95,7 +138,6 @@ struct block* new_block(parser_state *pstate, uint32_t code, uint32_t k)
     b->s.code = code;
     b->s.k = k;
     b->sense = 0;
-
     return b;
 }
 

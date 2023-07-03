@@ -8,12 +8,14 @@
 #include "bpf_macro.h"
 
 #define NONE 0
-#define CHUNK_NUM 1024
+
 
 typedef struct parser_state{
     struct block *blk;
     struct block *chunks[CHUNK_NUM]; 
+    struct sock_fprog prog;
     int chunk_id;
+    int insn_num;
 }parser_state;
 
 
@@ -55,11 +57,12 @@ struct slist* gen_load_x(parser_state *, uint32_t offset, uint32_t size);
 struct slist* sappend(struct slist* s0, struct slist* s1, int type);
 
 void finish_parse(parser_state *);
-void set_offset_cfg(parser_state *pstate);
-void bpf_dump(struct block *b);
-void bpf_disassembly(struct stmt s);
+void gen_bpf_insn(parser_state *pstate);
+void set_offset_cfg(parser_state *);
+void bpf_dump(parser_state *pstate);
+void bpf_disassembly(struct bpf_insn s);
 void free_bpf_block(parser_state *);
-
+void bpf_dd(parser_state *pstate);
 // 에뮬레이팅과정 리틀엔디안, 빅엔디안 계산필수
 
 #endif

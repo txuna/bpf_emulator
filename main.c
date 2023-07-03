@@ -10,6 +10,8 @@ int main(int argc, char **argv)
     char *command = concatenate_argv(argc, argv);
     parser_state p;
     memset(&p, 0, sizeof(parser_state));
+    p.chunk_id = 0;
+    p.insn_num = 0;
 
     int ret = node_parse(command, &p);
     if(ret != 0)
@@ -17,7 +19,11 @@ int main(int argc, char **argv)
         free(command);
         return 1; 
     }
-    bpf_dump(p.blk);
+    gen_bpf_insn(&p);
+    printf("disassembly bpf instruction\n");
+    bpf_dump(&p);
+    printf("\nshow bpf bytecode\n");
+    bpf_dd(&p);
     free_bpf_block(&p);
     free(command);
     return 0;

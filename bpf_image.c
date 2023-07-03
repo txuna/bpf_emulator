@@ -1,37 +1,26 @@
 #include "main.h"
 
-void bpf_dump(struct block *b)
+void bpf_dd(parser_state *pstate)
 {
-    if(b == NULL)
+    for(int i=0; i<pstate->prog.len; i++)
     {
-        return;
+        struct bpf_insn bpf = pstate->prog.bpf[i];
+        printf("(%03d) {0x%x, %d, %d, 0x%x}\n", bpf.ins_offset, bpf.code, bpf.jt, bpf.jf, bpf.k);
     }
-    if(b->marked == 1)
-    {
-        return;
-    }
-    // b->stmts 먼저 풀고 
-    // b->s 출력 하고 
-    // b->jt or b->jf
-    struct slist *list = b->stmts;
-    while(list != NULL)
-    {
-        bpf_disassembly(list->s);
-        list = list->next;
-    }
-    b->marked = 1;
-    bpf_disassembly(b->s);
-    bpf_dump(b->jt);
-    // 이때 b의 sense값이 1이면 jt에 ret 0 블럭, 0이라면 ret k 블럭 
-    bpf_dump(b->jf);
-    // 이때 b의 sense값이 0이면 jt에 ret 0 블럭, 1이라면 ret k 블럭 
-
-    return;
 }
 
-void bpf_disassembly(struct stmt s)
+void bpf_dump(parser_state *pstate)
 {
-    printf("(%03d) ", s.offset);
+    for(int i=0; i<pstate->prog.len; i++)
+    {
+        struct bpf_insn bpf = pstate->prog.bpf[i];
+        bpf_disassembly(bpf);
+    }
+}
+
+void bpf_disassembly(struct bpf_insn s)
+{
+    printf("(%03d) ", s.ins_offset);
     switch(s.code)
     {
         case BPF_LD | BPF_W | BPF_ABS:
@@ -155,15 +144,15 @@ void bpf_disassembly(struct stmt s)
             break;
 
         case BPF_JMP | BPF_JEQ | BPF_K:
-            printf("jeq #0x%x\n", s.k);
+            printf("jeq #0x%x\t\tjt %d\tjf %d\n", s.k, s.jt, s.jf);
             break; 
 
         case BPF_JMP | BPF_JGT | BPF_K:
-            printf("jgt #0x%x\n", s.k);
+            printf("jgt #0x%x\t\tjt %d\tjf %d\n", s.k, s.jt, s.jf);
             break; 
 
         case BPF_JMP|BPF_JSET|BPF_K:
-            printf("jset #0x%x\n", s.k);
+            printf("jset #0x%x\t\tjt %d\tjf %d\n", s.k, s.jt, s.jf);
             break;
 
         default:
