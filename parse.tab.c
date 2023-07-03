@@ -1113,8 +1113,8 @@ yyreduce:
   case 2: /* state: expr  */
 #line 44 "parse.y"
     {
-        finish_parse(p, (yyvsp[0].blk));
         p->blk = (yyvsp[0].blk); 
+        finish_parse(p);
     }
 #line 1120 "parse.tab.c"
     break;

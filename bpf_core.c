@@ -1,6 +1,33 @@
 #include "main.h"
 
-void finish_parse(parser_state *pstate, struct block *b)
+void gen_bpf_insn()
+{
+
+}
+
+void set_offset_cfg(parser_state *pstate)
+{
+    int offset = 0;
+    struct block *b;
+    for(int i=0; i<pstate->chunk_id; i++)
+    {
+        b = pstate->chunks[i];
+        //block의 stmts먼저 offset 체킹
+        struct slist *list = b->stmts; 
+        while(list)
+        {
+            list->s.offset = offset;
+            list = list->next;
+            offset += 1;
+        }
+        b->s.offset = offset;
+        offset += 1;
+    }
+
+    return;
+}
+
+void finish_parse(parser_state *pstate)
 {
     struct block *jt_ret, *jf_ret; 
     jt_ret = gen_retblk(pstate, 1); 
@@ -38,6 +65,9 @@ void finish_parse(parser_state *pstate, struct block *b)
             }
         }
     }
+
+    set_offset_cfg(pstate);
+
     return;
 }
 

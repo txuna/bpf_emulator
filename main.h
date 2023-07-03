@@ -54,7 +54,8 @@ struct slist* gen_iphdrlen(parser_state *);
 struct slist* gen_load_x(parser_state *, uint32_t offset, uint32_t size);
 struct slist* sappend(struct slist* s0, struct slist* s1, int type);
 
-void finish_parse(parser_state *, struct block *b);
+void finish_parse(parser_state *);
+void set_offset_cfg(parser_state *pstate);
 void bpf_dump(struct block *b);
 void bpf_disassembly(struct stmt s);
 void free_bpf_block(parser_state *);

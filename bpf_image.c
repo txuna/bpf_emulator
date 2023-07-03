@@ -31,6 +31,7 @@ void bpf_dump(struct block *b)
 
 void bpf_disassembly(struct stmt s)
 {
+    printf("(%03d) ", s.offset);
     switch(s.code)
     {
         case BPF_LD | BPF_W | BPF_ABS:

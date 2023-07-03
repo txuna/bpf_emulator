@@ -180,12 +180,25 @@ BPF_ALU+BPF_RSH+BPF_X  A	<- A >>	X
 BPF_ALU+BPF_NEG	      A	<- -A
 */
 
+struct bpf_insn {
+	uint16_t	code;
+	uint8_t	jt;
+	uint8_t	jf;
+	uint32_t k;
+};
+
+struct sock_fprog{
+    int len; 
+	struct bpf_insn *bpf;
+};
+
 /*
  * A single statement, corresponding to an instruction in a block.
  */
 struct stmt {
 	int code;		/* opcode */
 	uint32_t k;		/* k field */
+	int offset;		/* instruction offset */
 };
 
 struct slist {
@@ -195,7 +208,6 @@ struct slist {
 
 
 struct block {
-	uint32_t is_ret; 
 	struct slist *stmts;	/* side effect stmts */
 	struct stmt s;		/* branch stmt */
 	/*
@@ -208,7 +220,7 @@ struct block {
 	int sense;			/* sense값에 따라 다음 붙일 block이 jt(0)인지 jf(1)인지 정해짐*/
 	struct block *jt;		/* edge corresponding to the jt branch */
 	struct block *jf;		/* edge corresponding to the jf branch */
-	int marked;
+	int marked;	//이미 처리했던 블록인지 확인
 };
 
 

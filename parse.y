@@ -42,8 +42,8 @@ int yylex();
 
 state : expr 
     {
-        finish_parse(p, $1);
         p->blk = $1; 
+        finish_parse(p);
     }
     ;
 
