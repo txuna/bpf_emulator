@@ -6,6 +6,10 @@ void bpf_dump(struct block *b)
     {
         return;
     }
+    if(b->marked == 1)
+    {
+        return;
+    }
     // b->stmts 먼저 풀고 
     // b->s 출력 하고 
     // b->jt or b->jf
@@ -15,6 +19,7 @@ void bpf_dump(struct block *b)
         bpf_disassembly(list->s);
         list = list->next;
     }
+    b->marked = 1;
     bpf_disassembly(b->s);
     bpf_dump(b->jt);
     // 이때 b의 sense값이 1이면 jt에 ret 0 블럭, 0이라면 ret k 블럭 

@@ -1113,8 +1113,8 @@ yyreduce:
   case 2: /* state: expr  */
 #line 44 "parse.y"
     {
-        // sense값 따라 쭉 이동하면서 마지막에 ret 2개 붙이기
-        p->blk = (yyvsp[0].blk); //gen_ret($1);
+        finish_parse(p, (yyvsp[0].blk));
+        p->blk = (yyvsp[0].blk); 
     }
 #line 1120 "parse.tab.c"
     break;

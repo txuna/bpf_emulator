@@ -6,7 +6,39 @@ void finish_parse(parser_state *pstate, struct block *b)
     jt_ret = gen_retblk(pstate, 1); 
     jf_ret = gen_retblk(pstate, 0);
 
-
+    // chunks 기반으로 sense값과 jt jf가 NULL인 구간 연결? 
+    // 2를 빼는 이유는 마지막 retblk 2개
+    for(int i=0; i<(pstate->chunk_id)-2; i++)
+    {
+        struct block *b = pstate->chunks[i];
+        if(b->jt == NULL)
+        {
+            // sense값이 0이면 jt쪽은 True가 됨 
+            // sense값이 1이면 jf쪽은 True가 됨
+            if(!b->sense)
+            {
+                b->jt = jt_ret;
+            }
+            else
+            {
+                b->jt = jf_ret;
+            }
+        }
+        if(b->jf == NULL)
+        {
+            // sense값이 0이면 jf는 False
+            // sense값이 1이면 jf는 True
+            if(!b->sense)
+            {
+                b->jf = jf_ret;
+            }
+            else
+            {
+                b->jf = jt_ret;
+            }
+        }
+    }
+    return;
 }
 
 struct block* gen_retblk(parser_state *pstate, uint32_t k)

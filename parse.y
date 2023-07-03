@@ -42,8 +42,8 @@ int yylex();
 
 state : expr 
     {
-        // sense값 따라 쭉 이동하면서 마지막에 ret 2개 붙이기
-        p->blk = $1; //gen_ret($1);
+        finish_parse(p, $1);
+        p->blk = $1; 
     }
     ;
 

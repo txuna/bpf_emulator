@@ -208,6 +208,7 @@ struct block {
 	int sense;			/* sense값에 따라 다음 붙일 block이 jt(0)인지 jf(1)인지 정해짐*/
 	struct block *jt;		/* edge corresponding to the jt branch */
 	struct block *jf;		/* edge corresponding to the jf branch */
+	int marked;
 };
 
 
