@@ -37,8 +37,13 @@ void gen_bpf_insn(parser_state *pstate)
             jt = b->jf; 
             jf = b->jt;
         }
+        // 블럭의 s가 아닌 stmts의 s를 가지고 와야됨 만약 stmts가 NULL이라면 그때 s 
+        uint32_t jt_offset, jf_offset = 0; 
+        
+        jt_offset = jt->stmts != NULL ? jt->stmts->s.offset : jt->s.offset; 
+        jf_offset = jf->stmts != NULL ? jf->stmts->s.offset : jf->s.offset;
 
-        struct bpf_insn ins = {b->s.offset, b->s.code, jt->s.offset, jf->s.offset, b->s.k};
+        struct bpf_insn ins = {b->s.offset, b->s.code, jt_offset, jf_offset, b->s.k};
         pstate->prog.bpf[index] = ins;
         index += 1;
     }
