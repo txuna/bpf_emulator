@@ -24,6 +24,7 @@ typedef struct parser_state{
     int chunk_id;
     int insn_num;
     packet_handler_t *packet_handler; 
+    bpf_emu_t bpf_emu;
 }parser_state;
 
 
@@ -82,6 +83,8 @@ void bpf_emulator(parser_state *pstate);
 void bpf_command_help();
 void bpf_command_n();
 int compare_string_command(char* command);
+
+void dump_hex(uint8_t* data, size_t size);
 
 #endif
 

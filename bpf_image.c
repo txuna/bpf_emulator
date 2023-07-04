@@ -14,7 +14,19 @@ void bpf_dump(parser_state *pstate)
     for(int i=0; i<pstate->prog.len; i++)
     {
         struct bpf_insn bpf = pstate->prog.bpf[i];
-        bpf_disassembly(bpf);
+        if(bpf.ins_offset == pstate->bpf_emu.pc)
+        {
+            printf("%c[1;32m",27);
+            bpf_disassembly(bpf);
+            printf("%c[0m",27); 
+        }
+        else
+        {
+            printf("%c[1;37m",27);
+            bpf_disassembly(bpf);
+            printf("%c[0m",27); 
+        }
+        
     }
 }
 

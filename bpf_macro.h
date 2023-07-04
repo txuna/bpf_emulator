@@ -230,6 +230,7 @@ typedef struct bpf_emu_s
 	uint32_t pc; 
 	uint32_t x; 
 	uint32_t a;
+	uint32_t processed_packet_index; //instrution 적용이 끝난 패킷 인덱스
 }bpf_emu_t;
 
 

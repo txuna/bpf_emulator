@@ -29,16 +29,15 @@ int main(int argc, char **argv)
     
     p.packet_handler = packet_handler;
     
-    //test 
+    //test
+    /* 
     for(int i=0; i<p.packet_handler->pkt_num;i++)
     {
         ethernet_t *ether = (ethernet_t*)p.packet_handler->pkt[i].pkt_array;
         printf("ETHER TYPE : 0x%x\n", ntohs(ether->protocol));
     }
-
-    // DUMP
-    bpf_dump(&p);
-    bpf_dd(&p);
+    */
+    bpf_emulator(&p);
 
 pcap_clean:
     for(int i=0; i<p.packet_handler->pkt_num;i++)
