@@ -1,50 +1,64 @@
 #include "main.h"
 
-void pcap_parser(const char* file)
+packet_handler_t* pcap_parser(const char* file)
 {
     file_state_t *file_state = load_pcap(file);
     if(file_state->buffer == NULL)
     {
-        return;
+        return NULL;
     }
 
-    load_packet(file_state);
+    packet_handler_t* packet_handler = load_packet(file_state);
 
     free(file_state->buffer);
     free(file_state);
-    return;
+    return packet_handler;
 }
 
-void load_packet(file_state_t *file_state)
+packet_handler_t* load_packet(file_state_t *file_state)
 {
     int read_packet_num = 0;
     int read_data_bytes = 0;
+    packet_handler_t *packet_handler = (packet_handler_t*)malloc(sizeof(packet_handler_t));
+
+    if(packet_handler == NULL)
+    {
+        return NULL;
+    }
+
+    memset(packet_handler, 0, sizeof(packet_handler_t));
+
     pcap_hdr_t *phdr = (pcap_hdr_t*)file_state->buffer;
-    printf("Major - Minor : %d - %d\n", phdr->version_major, phdr->version_minor);
 
     while(1)
     {
+        // 저장한도 초과
+        if(read_packet_num >= MAX_PACKET)
+        {
+            break; 
+        }
+
         int read_len = sizeof(pcap_hdr_t) + (sizeof(pcaprec_hdr_t) * read_packet_num) + read_data_bytes;
         if(read_len >= file_state->size)
         {
-            printf("END\n");
             break;
         }
-        pcaprec_hdr_t *rechdr = (pcaprec_hdr_t*)(file_state->buffer + read_len);
-        
 
-        printf("packet len : %d\n", rechdr->incl_len);
+        pcaprec_hdr_t *rechdr = (pcaprec_hdr_t*)(file_state->buffer + read_len);
 
         // file_state->buffer + read_len + sizeof(pcaprec_hdr_t) 하면 packet data임
         uint8_t *packet_data = file_state->buffer + read_len + sizeof(pcaprec_hdr_t);
-        ethernet_t *ether = (ethernet_t*)packet_data;
-        printf("ETHER TYPE : 0x%x\n", ntohs(ether->protocol));
+        
+        packet_handler->pkt[read_packet_num].pkt_array = (uint8_t*)malloc(sizeof(uint8_t) * rechdr->incl_len);
+        memcpy(packet_handler->pkt[read_packet_num].pkt_array, packet_data, rechdr->incl_len);
+        packet_handler->pkt[read_packet_num].pkt_len = rechdr->incl_len;
+        packet_handler->pkt_num += 1;
 
         read_packet_num += 1;
         read_data_bytes += rechdr->incl_len;
     }
 
-    return;
+    return packet_handler;
 }
 
 

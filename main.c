@@ -21,14 +21,37 @@ int main(int argc, char **argv)
     }
     gen_bpf_insn(&p);
 
-    pcap_parser("packet.pcap");
+    packet_handler_t *packet_handler = pcap_parser("packet.pcap");
+    if(packet_handler == NULL)
+    {
+        goto bpf_clean;
+    }
+    
+    p.packet_handler = packet_handler;
+    
+    //test 
+    for(int i=0; i<p.packet_handler->pkt_num;i++)
+    {
+        ethernet_t *ether = (ethernet_t*)p.packet_handler->pkt[i].pkt_array;
+        printf("ETHER TYPE : 0x%x\n", ntohs(ether->protocol));
+    }
 
     // DUMP
     bpf_dump(&p);
     bpf_dd(&p);
+
+pcap_clean:
+    for(int i=0; i<p.packet_handler->pkt_num;i++)
+    {
+        free(p.packet_handler->pkt[i].pkt_array);
+    }
+    free(p.packet_handler);
+
+bpf_clean:
     free_bpf_block(&p);
     free(command);
     return 0;
+
 }
 
 int node_parse(const char *string, parser_state *p)

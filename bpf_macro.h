@@ -225,7 +225,12 @@ struct block {
 	int marked;	//이미 처리했던 블록인지 확인
 };
 
-
+typedef struct bpf_emu_s
+{
+	uint32_t pc; 
+	uint32_t x; 
+	uint32_t a;
+}bpf_emu_t;
 
 
 #endif 

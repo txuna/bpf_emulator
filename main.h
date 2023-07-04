@@ -11,8 +11,11 @@
 #include "bpf_macro.h"
 #include "pcap_macro.h"
 
-#define NONE 0
+#define EMU_NEXT 1 
+#define EMU_HELP 2
 
+#define NONE 0
+#define MAX_BUFFER 1024
 
 typedef struct parser_state{
     struct block *blk;
@@ -20,6 +23,7 @@ typedef struct parser_state{
     struct sock_fprog prog;
     int chunk_id;
     int insn_num;
+    packet_handler_t *packet_handler; 
 }parser_state;
 
 
@@ -70,10 +74,14 @@ void bpf_dd(parser_state *pstate);
 // 에뮬레이팅과정 리틀엔디안, 빅엔디안 계산필수
 
 
-void pcap_parser(const char* file);
-void load_packet(file_state_t *file_state);
+packet_handler_t* pcap_parser(const char* file);
+packet_handler_t* load_packet(file_state_t *file_state);
 file_state_t* load_pcap(const char* file);
 
+void bpf_emulator(parser_state *pstate);
+void bpf_command_help();
+void bpf_command_n();
+int compare_string_command(char* command);
 
 #endif
 

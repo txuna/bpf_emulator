@@ -2,6 +2,7 @@
 #define _PCAP_H
 
 #define READ_BUFFER 1024
+#define MAX_PACKET 1024
 
 typedef struct file_state_s{
     uint8_t *buffer; 
@@ -25,12 +26,17 @@ typedef struct pcaprec_hdr_s {
     uint32_t orig_len; /* actual length of packet */
 } pcaprec_hdr_t;
 
-
 typedef struct packet_s
 {
-    uint8_t *pkt_array;
-    int pkt_len;
-} packet_t;
+    uint8_t *pkt_array; 
+    int pkt_len; 
+}packet_t;
+
+typedef struct packet_handler_s
+{
+    packet_t pkt[MAX_PACKET];
+    int pkt_num;
+} packet_handler_t;
 
 typedef struct ethernet_s{
 	uint8_t dest_mac[6];
