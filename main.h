@@ -5,7 +5,11 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include "bpf_macro.h"
+#include "pcap_macro.h"
 
 #define NONE 0
 
@@ -64,6 +68,12 @@ void bpf_disassembly(struct bpf_insn s);
 void free_bpf_block(parser_state *);
 void bpf_dd(parser_state *pstate);
 // 에뮬레이팅과정 리틀엔디안, 빅엔디안 계산필수
+
+
+void pcap_parser(const char* file);
+void load_packet(file_state_t *file_state);
+file_state_t* load_pcap(const char* file);
+
 
 #endif
 

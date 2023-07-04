@@ -20,9 +20,11 @@ int main(int argc, char **argv)
         return 1; 
     }
     gen_bpf_insn(&p);
-    printf("disassembly bpf instruction\n");
+
+    pcap_parser("packet.pcap");
+
+    // DUMP
     bpf_dump(&p);
-    printf("\nshow bpf bytecode\n");
     bpf_dd(&p);
     free_bpf_block(&p);
     free(command);
