@@ -55,20 +55,15 @@ expr : pred
     {
         $$ = $1;
     }
-    | expr T_AND expr
+    | expr T_AND pred
     {
         gen_and($1, $3);
         $$ = $1;
     }
-    | expr T_OR expr
+    | expr T_OR pred
     {
         gen_or($1, $3);
         $$ = $1; 
-    }
-    | T_NOT expr 
-    {
-        gen_not($2);
-        $$ = $2;
     }
     | '(' expr ')'
     {

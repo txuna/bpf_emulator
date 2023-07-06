@@ -58,6 +58,7 @@ void display_progess(parser_state *pstate)
     load_bpf_pos_and_size(pstate->bpf_emu, ins, &pos, &bpf_size);
 
     int index = pstate->bpf_emu.processed_packet_index;
+    printf("\e[1;1H\e[2J");
     printf("─────────[REGISTER]─────────\n");
     printf("A(Accumulator)      : 0x%x\n", pstate->bpf_emu.a);
     printf("X(Index Register)   : 0x%x\n", pstate->bpf_emu.x);
@@ -190,9 +191,9 @@ void load_bpf_pos_and_size(bpf_emu_t emu, struct bpf_insn ins, size_t *pos, size
 void dump_hex(uint8_t* data, size_t size, size_t pos, size_t bpf_size) 
 {
     int tmp = 0;
-	char ascii[17];
+	char ascii[25];
 	size_t i, j;
-	ascii[16] = '\0';
+	ascii[24] = '\0';
 	for (i = 0; i < size; ++i) 
     {
         if(i >= pos && i < pos+bpf_size)
@@ -208,27 +209,27 @@ void dump_hex(uint8_t* data, size_t size, size_t pos, size_t bpf_size)
 		printf("%02X ", ((uint8_t*)data)[i]);
 		if (((uint8_t*)data)[i] >= ' ' && ((uint8_t*)data)[i] <= '~') 
         {
-			ascii[i % 16] = ((uint8_t*)data)[i];
+			ascii[i % 24] = ((uint8_t*)data)[i];
 		} 
         else 
         {
-			ascii[i % 16] = '.';
+			ascii[i % 24] = '.';
 		}
 		if ((i+1) % 8 == 0 || i+1 == size) 
         {
 			printf(" ");
-			if ((i+1) % 16 == 0) 
+			if ((i+1) % 24 == 0) 
             {
 				printf("|  %s \n", ascii);
 			} 
             else if (i+1 == size)
              {
-				ascii[(i+1) % 16] = '\0';
-				if ((i+1) % 16 <= 8) 
+				ascii[(i+1) % 24] = '\0';
+				if ((i+1) % 24 <= 8) 
                 {
 					printf(" ");
 				}
-				for (j = (i+1) % 16; j < 16; ++j) 
+				for (j = (i+1) % 24; j < 24; ++j) 
                 {
 					printf("   ");
 				}

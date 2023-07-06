@@ -26,21 +26,16 @@ void gen_bpf_insn(parser_state *pstate)
         }
 
         struct block *jt, *jf;
-
         /*
-        if(!b->sense)
+        if(!b->sense)   
         {
-            printf("t\n");
             jt = b->jt; 
             jf = b->jf; 
-            printf("pp : %d\n", jt->s.offset);
         }
         else
         {
-            printf("f\n");
             jt = b->jf; 
             jf = b->jt;
-            printf("pp : %d\n", jt->s.offset);
         }
         */
         jt = b->jt; 
@@ -224,19 +219,27 @@ void merge(struct block *b0, struct block *b1, int type)
             curr = curr->jf;
         }
     }
-    // or같은 경우에는 sense값에 따라 false로 이어지는 루틴에 연결해야 true일 땐 확인안하고 
-    // false일 때만 연결해서 확인하게
     if(!curr->sense)
     {
-        curr->jt = b1;
+        if(type == 0)
+        {
+            curr->jt = b1;
+        }
+        else // OR 
+        {
+            curr->jf = b1;
+        }
     }
-    else{
-        curr->jf = b1;
-    }
-
-    if(type == 1)
+    else
     {
-        curr->sense = !curr->sense;
+        if(type == 0)
+        {
+            curr->jf = b1;
+        }
+        else // OR 
+        {
+            curr->jt = b1;
+        }
     }
 }
 

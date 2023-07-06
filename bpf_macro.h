@@ -181,6 +181,10 @@ BPF_ALU+BPF_RSH+BPF_X  A	<- A >>	X
 BPF_ALU+BPF_NEG	      A	<- -A
 */
 
+#define OP_AND 1 
+#define OP_OR 2
+#define OP_NOT 3
+
 struct bpf_insn {
 	int ins_offset;
 	uint16_t code;
