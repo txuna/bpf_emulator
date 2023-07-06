@@ -17,6 +17,7 @@ void bpf_dump(parser_state *pstate)
         if(bpf.ins_offset == pstate->bpf_emu.pc)
         {
             printf("%c[1;32m",27);
+            printf("=>");
             bpf_disassembly(bpf);
             printf("%c[0m",27); 
         }

@@ -95,9 +95,9 @@ int bpf_instruction_filter(parser_state *pstate, struct bpf_insn ins, packet_t *
 
 int extract_short(uint8_t *p);
 int extrack_long(uint8_t* p);
+void load_bpf_pos_and_size(bpf_emu_t emu, struct bpf_insn ins, size_t *pos, size_t *bpf_size);
 
-
-void dump_hex(uint8_t* data, size_t size);
+void dump_hex(uint8_t* data, size_t size, size_t pos, size_t bpf_size);
 
 #endif
 

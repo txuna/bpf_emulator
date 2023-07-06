@@ -51,6 +51,12 @@ int compare_string_command(char* command)
 
 void display_progess(parser_state *pstate)
 {
+    size_t pos, bpf_size; 
+    pos = -1; 
+    bpf_size = -1;
+    struct bpf_insn ins = load_bpf_ins_from_offset(pstate);
+    load_bpf_pos_and_size(pstate->bpf_emu, ins, &pos, &bpf_size);
+
     int index = pstate->bpf_emu.processed_packet_index;
     printf("─────────[REGISTER]─────────\n");
     printf("A(Accumulator)      : 0x%x\n", pstate->bpf_emu.a);
@@ -60,7 +66,7 @@ void display_progess(parser_state *pstate)
     bpf_dump(pstate);
     printf("───────[PACKET : %03d]───────\n", index);
     packet_t *packet = load_packet_from_index(pstate);
-    dump_hex(packet->pkt_array, packet->pkt_len);
+    dump_hex(packet->pkt_array, packet->pkt_len, pos, bpf_size);
     printf("──────────[COMMAND]──────────\n");
     printf("> ");
 
@@ -76,6 +82,7 @@ void init_bpf_emu(parser_state *pstate)
 // bpf ins의 ret을 실행했다면 다시 초기화 진행 및 패킷 다음꺼 가지고 오기 및 해당 패킷의 accept reject 여부 알려주기
 void bpf_emulator(parser_state *pstate)
 {
+    size_t *pos, *bpf_size;
     char buffer[MAX_BUFFER] = {0};
     int command = 0;
     printf("BPF EMULATOR v1.0\n");
@@ -134,13 +141,70 @@ void bpf_emulator(parser_state *pstate)
     return;
 }
 
-void dump_hex(uint8_t* data, size_t size) 
+void load_bpf_pos_and_size(bpf_emu_t emu, struct bpf_insn ins, size_t *pos, size_t *bpf_size)
 {
+    switch(ins.code)
+    {
+        case BPF_LD | BPF_W | BPF_ABS:
+            *pos = ins.k; 
+            *bpf_size = 4;
+            break; 
+
+        case BPF_LD | BPF_H | BPF_ABS:
+            *pos = ins.k; 
+            *bpf_size = 2;
+            break;
+
+        case BPF_LD | BPF_B | BPF_ABS:
+            *pos = ins.k; 
+            *bpf_size = 1;
+            break; 
+
+        case BPF_LD | BPF_W | BPF_IND:
+            *pos = emu.x + ins.k;
+            *bpf_size = 4;
+            break; 
+
+        case BPF_LD | BPF_H | BPF_IND:
+            *pos = emu.x + ins.k; 
+            *bpf_size = 2;
+            break; 
+
+        case BPF_LD | BPF_B | BPF_IND: 
+            *pos = emu.x + ins.k; 
+            *bpf_size = 2;
+            break; 
+
+        case BPF_LDX | BPF_MSH | BPF_B:
+            *pos = ins.k;
+            *bpf_size = 1;
+            break; 
+
+        default:
+            break;
+    }
+
+    return;
+}
+
+void dump_hex(uint8_t* data, size_t size, size_t pos, size_t bpf_size) 
+{
+    int tmp = 0;
 	char ascii[17];
 	size_t i, j;
 	ascii[16] = '\0';
 	for (i = 0; i < size; ++i) 
     {
+        if(i >= pos && i < pos+bpf_size)
+        {
+            printf("%c[1;32m",27);
+            tmp += 1;
+        }
+        else
+        {
+            printf("%c[0m",27); 
+        }
+
 		printf("%02X ", ((uint8_t*)data)[i]);
 		if (((uint8_t*)data)[i] >= ' ' && ((uint8_t*)data)[i] <= '~') 
         {
