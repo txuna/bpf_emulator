@@ -68,10 +68,78 @@ void display_progess(parser_state *pstate)
     printf("───────[PACKET : %03d]───────\n", index);
     packet_t *packet = load_packet_from_index(pstate);
     dump_hex(packet->pkt_array, packet->pkt_len, pos, bpf_size);
+    printf("──────────[ANALYSIC]─────────\n");
+    packet_analysic(packet);
     printf("──────────[COMMAND]──────────\n");
     printf("> ");
 
     return;
+}
+
+void print_ip_string(const char* str, unsigned int ip) {
+    unsigned char bytes[4];
+
+    // 각 바이트 추출
+    bytes[0] = (ip >> 24) & 0xFF;
+    bytes[1] = (ip >> 16) & 0xFF;
+    bytes[2] = (ip >> 8) & 0xFF;
+    bytes[3] = ip & 0xFF;
+
+    // 문자열로 변환하여 출력
+    printf("%s : %u.%u.%u.%u\n", str, bytes[0], bytes[1], bytes[2], bytes[3]);
+}
+
+void packet_analysic(packet_t *packet)
+{
+    if(packet->pkt_len <= 11)
+    {
+        printf("Can't Analysic This Packet\n");
+    }
+    ethernet_t *ether = (ethernet_t*)packet->pkt_array;
+    uint16_t ether_type = htons(ether->protocol);
+    if(ether_type == 0x800)
+    {
+        printf("Ethernet Type : IPv4\n");
+        iphdr_t *ip = (iphdr_t*)(packet->pkt_array + IP_HEADER_OFFSET);
+        
+        print_ip_string("Source IP", ntohl(ip->saddr));
+        print_ip_string("Destination IP", ntohl(ip->daddr));
+        if(ip->protocol == 0x11)
+        {
+            printf("IP Protocol : UDP\n");
+            udphdr_t *udp = (udphdr_t*)(packet->pkt_array + IP_HEADER_OFFSET + 20);
+            printf("Source Port : %d\n", udp->source);
+            printf("Destination Port : %d\n", udp->dest);
+        }
+        else if(ip->protocol == 0x6)
+        {
+            printf("IP Protocol : TCP\n");
+            tcphdr_t *tcp = (tcphdr_t*)(packet->pkt_array + IP_HEADER_OFFSET + 20);
+            printf("Source Port : %d\n", tcp->th_sport);
+            printf("Destination Port : %d\n", tcp->th_dport);
+        }
+        else if(ip->protocol == 0x1)
+        {
+            printf("IP Protocol : ICMP\n");
+        }
+        else
+        {
+            printf("Can't Find IP Porotocol\n");
+        }
+        
+    }
+    else if(ether_type == 0x86dd)
+    {
+        printf("Ethernet Type : IPv6\n");
+    }
+    else if(ether_type == 0x806)
+    {
+        printf("Ethernet Type : ARP\n");
+    }
+    else
+    {
+        printf("Can't Find Ethernet Type\n");
+    }
 }
 
 void init_bpf_emu(parser_state *pstate)

@@ -98,6 +98,8 @@ int extrack_long(uint8_t* p);
 void load_bpf_pos_and_size(bpf_emu_t emu, struct bpf_insn ins, size_t *pos, size_t *bpf_size);
 
 void dump_hex(uint8_t* data, size_t size, size_t pos, size_t bpf_size);
+void packet_analysic(packet_t *packet);
+void print_ip_string(const char* str, unsigned int ip);
 
 #endif
 
