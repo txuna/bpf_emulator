@@ -27,16 +27,24 @@ void gen_bpf_insn(parser_state *pstate)
 
         struct block *jt, *jf;
 
+        /*
         if(!b->sense)
         {
+            printf("t\n");
             jt = b->jt; 
             jf = b->jf; 
+            printf("pp : %d\n", jt->s.offset);
         }
         else
         {
+            printf("f\n");
             jt = b->jf; 
             jf = b->jt;
+            printf("pp : %d\n", jt->s.offset);
         }
+        */
+        jt = b->jt; 
+        jf = b->jf;
         // 블럭의 s가 아닌 stmts의 s를 가지고 와야됨 만약 stmts가 NULL이라면 그때 s 
         uint32_t jt_offset, jf_offset = 0; 
         
