@@ -336,6 +336,7 @@ struct block* gen_dir_abbrev_internal(parser_state *pstate, uint32_t proto, uint
             {
                 return NULL;
             }
+            gen_not(b1);
             gen_and(b1, b2);
             gen_and(b0, b1);
         }
@@ -423,6 +424,7 @@ struct block* gen_icmp_field(parser_state *pstate, int field, uint32_t k)
     {
         return NULL;
     }
+    gen_not(b2);
     gen_and(b1, b2);
     
     b3 = gen_cmp(pstate, field, BPF_B, k, BPF_IND);

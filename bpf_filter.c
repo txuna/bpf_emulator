@@ -356,7 +356,15 @@ int bpf_instruction_filter(parser_state *pstate, struct bpf_insn ins, packet_t *
             break; 
 
         case BPF_JMP|BPF_JSET|BPF_K:
-            break;
+            if(pstate->bpf_emu.a & ins.k)
+            {
+                pstate->bpf_emu.pc = ins.jt;
+            }
+            else
+            {
+                pstate->bpf_emu.pc = ins.jf;
+            }
+            return BPF_FILTER_CONTINUE;
 
         default:
             printf("None Exist Instruction.\n");
