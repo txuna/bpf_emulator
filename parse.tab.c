@@ -530,9 +530,9 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    43,    43,    50,    54,    59,    64,    69,    75,    79,
-      88,    94,    98,   103,   107,   111,   115,   119,   124,   128,
-     134,   138,   145
+       0,    43,    43,    54,    58,    63,    68,    73,    79,    88,
+     103,   114,   118,   123,   127,   131,   135,   139,   144,   148,
+     154,   158,   165
 };
 #endif
 
@@ -1114,181 +1114,201 @@ yyreduce:
 #line 44 "parse.y"
     {
         p->blk = (yyvsp[0].blk); 
-        finish_parse(p);
+        if(finish_parse(p) == 1)
+        {
+            yyerror(p, "Too many instrcution for block\n");
+            YYERROR;
+        }
     }
-#line 1120 "parse.tab.c"
+#line 1124 "parse.tab.c"
     break;
 
   case 3: /* expr: pred  */
-#line 51 "parse.y"
+#line 55 "parse.y"
     {
         (yyval.blk) = (yyvsp[0].blk);
     }
-#line 1128 "parse.tab.c"
+#line 1132 "parse.tab.c"
     break;
 
   case 4: /* expr: expr T_AND expr  */
-#line 55 "parse.y"
+#line 59 "parse.y"
     {
         gen_and((yyvsp[-2].blk), (yyvsp[0].blk));
         (yyval.blk) = (yyvsp[-2].blk);
     }
-#line 1137 "parse.tab.c"
+#line 1141 "parse.tab.c"
     break;
 
   case 5: /* expr: expr T_OR expr  */
-#line 60 "parse.y"
+#line 64 "parse.y"
     {
         gen_or((yyvsp[-2].blk), (yyvsp[0].blk));
         (yyval.blk) = (yyvsp[-2].blk); 
     }
-#line 1146 "parse.tab.c"
+#line 1150 "parse.tab.c"
     break;
 
   case 6: /* expr: T_NOT expr  */
-#line 65 "parse.y"
+#line 69 "parse.y"
     {
         gen_not((yyvsp[0].blk));
         (yyval.blk) = (yyvsp[0].blk);
     }
-#line 1155 "parse.tab.c"
+#line 1159 "parse.tab.c"
     break;
 
   case 7: /* expr: '(' expr ')'  */
-#line 70 "parse.y"
+#line 74 "parse.y"
     {
         (yyval.blk) = (yyvsp[-1].blk);
     }
-#line 1163 "parse.tab.c"
+#line 1167 "parse.tab.c"
     break;
 
   case 8: /* pred: protocol  */
-#line 76 "parse.y"
+#line 80 "parse.y"
     {
         (yyval.blk) = gen_proto_abbrev_internal(p, (yyvsp[0].val));
+        if((yyval.blk) == NULL)
+        {
+            yyerror(p, "blk has null pointer\n");
+            YYERROR;
+        }
     }
-#line 1171 "parse.tab.c"
+#line 1180 "parse.tab.c"
     break;
 
   case 9: /* pred: protocol dir selector value  */
-#line 80 "parse.y"
+#line 89 "parse.y"
     {
         if(check_protocol(p, (yyvsp[-3].val), (yyvsp[-2].val), (yyvsp[-1].val), (yyvsp[0].val)) == 1)
         {
             yyerror(p, "None Expected selector\n");
             YYERROR; // throw error 
         }
+
         (yyval.blk) = gen_dir_abbrev_internal(p, (yyvsp[-3].val), (yyvsp[-2].val), (yyvsp[-1].val), (yyvsp[0].val));
+        if((yyval.blk) == NULL)
+        {
+            yyerror(p, "blk has null pointer\n");
+            YYERROR;
+        }
     }
-#line 1184 "parse.tab.c"
+#line 1199 "parse.tab.c"
     break;
 
   case 10: /* pred: T_ICMP icmp_field value  */
-#line 89 "parse.y"
+#line 104 "parse.y"
     {
         (yyval.blk) = gen_icmp_field(p, (yyvsp[-1].val), (yyvsp[0].val));
+        if((yyval.blk) == NULL)
+        {
+            yyerror(p, "blk has null pointer\n");
+            YYERROR;
+        }
     }
-#line 1192 "parse.tab.c"
+#line 1212 "parse.tab.c"
     break;
 
   case 11: /* icmp_field: T_TYPE  */
-#line 95 "parse.y"
+#line 115 "parse.y"
             {
                 (yyval.val) = I_TYPE;
             }
-#line 1200 "parse.tab.c"
+#line 1220 "parse.tab.c"
     break;
 
   case 12: /* icmp_field: T_CODE  */
-#line 99 "parse.y"
+#line 119 "parse.y"
             {
                 (yyval.val) = I_CODE;
             }
-#line 1208 "parse.tab.c"
+#line 1228 "parse.tab.c"
     break;
 
   case 13: /* protocol: T_IP  */
-#line 104 "parse.y"
+#line 124 "parse.y"
         {
             (yyval.val) = ETHERTYPE_IP;
         }
-#line 1216 "parse.tab.c"
+#line 1236 "parse.tab.c"
     break;
 
   case 14: /* protocol: T_TCP  */
-#line 108 "parse.y"
+#line 128 "parse.y"
         {
             (yyval.val) = Q_TCP;
         }
-#line 1224 "parse.tab.c"
+#line 1244 "parse.tab.c"
     break;
 
   case 15: /* protocol: T_UDP  */
-#line 112 "parse.y"
+#line 132 "parse.y"
         {
             (yyval.val) = Q_UDP;
         }
-#line 1232 "parse.tab.c"
+#line 1252 "parse.tab.c"
     break;
 
   case 16: /* protocol: T_ARP  */
-#line 116 "parse.y"
+#line 136 "parse.y"
         {
             (yyval.val) = ETHERTYPE_ARP;
         }
-#line 1240 "parse.tab.c"
+#line 1260 "parse.tab.c"
     break;
 
   case 17: /* protocol: T_ICMP  */
-#line 120 "parse.y"
+#line 140 "parse.y"
         {
             (yyval.val) = Q_ICMP;
         }
-#line 1248 "parse.tab.c"
+#line 1268 "parse.tab.c"
     break;
 
   case 18: /* dir: T_SRC  */
-#line 125 "parse.y"
+#line 145 "parse.y"
     {
         (yyval.val) = SRC;
     }
-#line 1256 "parse.tab.c"
+#line 1276 "parse.tab.c"
     break;
 
   case 19: /* dir: T_DST  */
-#line 129 "parse.y"
+#line 149 "parse.y"
     {
         (yyval.val) = DST;
     }
-#line 1264 "parse.tab.c"
+#line 1284 "parse.tab.c"
     break;
 
   case 20: /* selector: T_HOST  */
-#line 135 "parse.y"
+#line 155 "parse.y"
         {
             (yyval.val) = HOST;
         }
-#line 1272 "parse.tab.c"
+#line 1292 "parse.tab.c"
     break;
 
   case 21: /* selector: T_PORT  */
-#line 139 "parse.y"
+#line 159 "parse.y"
         {
             (yyval.val) = PORT;
         }
-#line 1280 "parse.tab.c"
+#line 1300 "parse.tab.c"
     break;
 
   case 22: /* value: T_UINT  */
-#line 146 "parse.y"
+#line 166 "parse.y"
     {
         (yyval.val) = (yyvsp[0].val);
     }
-#line 1288 "parse.tab.c"
+#line 1308 "parse.tab.c"
     break;
 
 
-#line 1292 "parse.tab.c"
+#line 1312 "parse.tab.c"
 
       default: break;
     }
@@ -1481,7 +1501,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 151 "parse.y"
+#line 171 "parse.y"
 
 
 void yyerror(struct parser_state *p, const char* s) {

@@ -78,10 +78,12 @@ void bpf_emulator(parser_state *pstate)
                 break; 
 
             default:
-                return; 
+                is_running = 0;
+                break; 
         }
-        
     }
+
+    printf("FINISHED BPF EMULATOR\n");
 
     return;
 }

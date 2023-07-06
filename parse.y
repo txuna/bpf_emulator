@@ -43,7 +43,11 @@ int yylex();
 state : expr 
     {
         p->blk = $1; 
-        finish_parse(p);
+        if(finish_parse(p) == 1)
+        {
+            yyerror(p, "Too many instrcution for block\n");
+            YYERROR;
+        }
     }
     ;
 
@@ -75,6 +79,11 @@ expr : pred
 pred : protocol 
     {
         $$ = gen_proto_abbrev_internal(p, $1);
+        if($$ == NULL)
+        {
+            yyerror(p, "blk has null pointer\n");
+            YYERROR;
+        }
     }
     | protocol dir selector value
     {
@@ -83,11 +92,22 @@ pred : protocol
             yyerror(p, "None Expected selector\n");
             YYERROR; // throw error 
         }
+
         $$ = gen_dir_abbrev_internal(p, $1, $2, $3, $4);
+        if($$ == NULL)
+        {
+            yyerror(p, "blk has null pointer\n");
+            YYERROR;
+        }
     }
     | T_ICMP icmp_field value
     {
         $$ = gen_icmp_field(p, $2, $3);
+        if($$ == NULL)
+        {
+            yyerror(p, "blk has null pointer\n");
+            YYERROR;
+        }
     }
     ;
 

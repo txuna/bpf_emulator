@@ -77,11 +77,16 @@ void set_offset_cfg(parser_state *pstate)
     return;
 }
 
-void finish_parse(parser_state *pstate)
+int finish_parse(parser_state *pstate)
 {
     struct block *jt_ret, *jf_ret; 
     jt_ret = gen_retblk(pstate, 1); 
     jf_ret = gen_retblk(pstate, 0);
+
+    if(jt_ret == NULL | jf_ret == NULL)
+    {
+        return 1;
+    }
 
     // chunks 기반으로 sense값과 jt jf가 NULL인 구간 연결? 
     // 2를 빼는 이유는 마지막 retblk 2개
@@ -117,18 +122,27 @@ void finish_parse(parser_state *pstate)
     }
 
     set_offset_cfg(pstate);
-    return;
+    return 0;
 }
 
 struct block* gen_retblk(parser_state *pstate, uint32_t k)
 {
     struct block *b = new_block(pstate, BPF_RET | BPF_K, k);
+    if(b == NULL)
+    {
+        return NULL;
+    }
     b->s.k = k;
     return b;
 }
 
 struct block* new_block(parser_state *pstate, uint32_t code, uint32_t k)
 {
+    if(pstate->chunk_id >= CHUNK_NUM)
+    {
+        return NULL;
+    }
+
     struct block *b = (struct block*)malloc(sizeof(struct block));
     if(b == NULL)
     {
@@ -243,8 +257,13 @@ struct block* gen_ncmp(parser_state *pstate, uint32_t jtype, uint32_t offset, ui
     struct slist *s; 
     struct block *b; 
 
-    s = gen_load_a(pstate, offset, size, addr_mode);
     b = new_block(pstate, JMP(jtype), value);
+    if(b == NULL)
+    {
+        return NULL;
+    }
+
+    s = gen_load_a(pstate, offset, size, addr_mode);
     b->stmts = s; 
 
     return b;
@@ -290,6 +309,10 @@ struct block* gen_dir_abbrev_internal(parser_state *pstate, uint32_t proto, uint
     struct block *b0, *b1, *b2;
     // protocol 관련 먼저 만들고
     b0 = gen_proto_abbrev_internal(pstate, proto);
+    if(b0 == NULL)
+    {
+        return NULL;
+    }
 
     // dir와 selector 만들기 
     switch(selector)
@@ -297,6 +320,10 @@ struct block* gen_dir_abbrev_internal(parser_state *pstate, uint32_t proto, uint
         case HOST:
         {
             b1 = gen_host(pstate, DIR_IP(dir), k);
+            if(b1 == NULL)
+            {
+                return NULL;
+            }
             gen_and(b0, b1);
         }
         break; 
@@ -305,6 +332,10 @@ struct block* gen_dir_abbrev_internal(parser_state *pstate, uint32_t proto, uint
         {
             b1 = gen_cmp_set(pstate, ETHER_HEADER_OFFSET + IP_FRAGMENT_OFFSET, BPF_H, 0x1fff, BPF_ABS);
             b2 = gen_port(pstate, DIR_PORT(dir), k);
+            if(b1 == NULL | b2 == NULL)
+            {
+                return NULL;
+            }
             gen_and(b1, b2);
             gen_and(b0, b1);
         }
@@ -329,6 +360,10 @@ struct block* gen_proto(parser_state *pstate, uint32_t v, uint32_t proto)
             // fragment 0만
             b0 = gen_linktype(pstate, proto);
             b1 = gen_cmp(pstate, IP_HEADER_OFFSET + IP_PROTOCOL_OFFSET, BPF_B, v, BPF_ABS);
+            if(b0 == NULL | b1 == NULL)
+            {
+                return NULL;
+            }
             gen_and(b0, b1);
             break;
 
@@ -361,10 +396,15 @@ struct block* gen_port(parser_state *pstate, uint32_t dir, uint32_t k)
 {
     struct block *b; 
     struct slist *s; 
+
+    b = gen_cmp(pstate, dir, BPF_H, k, BPF_IND);
+    if(b == NULL)
+    {
+        return NULL;
+    }
     // ldx 4*([14]&0xf)로 x register에 값을 먼저 로드
     s = gen_iphdrlen(pstate); 
 
-    b = gen_cmp(pstate, dir, BPF_H, k, BPF_IND);
     // s instruction이 해당 블럭에서 가장먼저 실행되어야 해서 기존 블럭의 stmts에 가장 앞에 설정
     struct slist *result_s = sappend(b->stmts, s, FIRST);
     b->stmts = result_s;
@@ -379,17 +419,25 @@ struct block* gen_icmp_field(parser_state *pstate, int field, uint32_t k)
 
     b1 = gen_proto_abbrev_internal(pstate, Q_ICMP);
     b2 = gen_cmp_set(pstate, ETHER_HEADER_OFFSET + IP_FRAGMENT_OFFSET, BPF_H, 0x1fff, BPF_ABS);
+    if(b1 == NULL || b2 == NULL)
+    {
+        return NULL;
+    }
     gen_and(b1, b2);
     
-    s = gen_iphdrlen(pstate);   
     b3 = gen_cmp(pstate, field, BPF_B, k, BPF_IND);
+    if(b3 == NULL)
+    {
+        return NULL;
+    }
+
+    s = gen_iphdrlen(pstate);   
     struct slist *result_s = sappend(b3->stmts, s, FIRST);
     b3->stmts = result_s;
 
     gen_and(b1, b3); 
     
-
-   return b1; 
+    return b1; 
 }
 
 

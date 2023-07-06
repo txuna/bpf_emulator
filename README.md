@@ -97,6 +97,47 @@ bpf_dump는 tcpdump의 -d 옵션과 동일합니다.
 
 
 ### BPF Instruction 기반 PCAP 파싱 및 에뮬레이팅  
+BPF 기반으로 가상의 패킷 처리 시뮬레이선을 진행하기 위한 나머지부분은 PCAP파싱과 실제 bpf instruction을 기반으로 에뮬레이팅 구현부로 나뉜다.  
+
+1. Implement Pcap Parser 
+먼저 pcap을 만들기 위해 아래와 같은 명령어를 사용해 pcap파일을 만든다. 
+```Shell
+sudo tcpdump -i eth0 -w packet.pcap 
+```
+만들어진 pcap을 바탕으로 해당 파일의 크기만큼 동적할당을 진행한다. 
+그리고 아래 데이터 유형을 만들어 pcap의 데이터를 파싱한다. 
+```C
+typedef struct packet_s
+{
+    uint8_t *pkt_array; 
+    int pkt_len; 
+}packet_t;
+
+typedef struct packet_handler_s
+{
+    packet_t pkt[MAX_PACKET];
+    int pkt_num;
+} packet_handler_t;
+
+funcrion
+pcaprec_hdr_t *rechdr = (pcaprec_hdr_t*)(file_state->buffer + read_len);
+
+// file_state->buffer + read_len + sizeof(pcaprec_hdr_t) 하면 packet data임
+uint8_t *packet_data = file_state->buffer + read_len + sizeof(pcaprec_hdr_t);
+
+packet_handler->pkt[read_packet_num].pkt_array = (uint8_t*)malloc(sizeof(uint8_t) * rechdr->incl_len);
+memcpy(packet_handler->pkt[read_packet_num].pkt_array, packet_data, rechdr->incl_len);
+packet_handler->pkt[read_packet_num].pkt_len = rechdr->incl_len;
+packet_handler->pkt_num += 1;
+
+read_packet_num += 1;
+read_data_bytes += rechdr->incl_len;
+```
+읽은 패킷에 대해 pkt_array에 프로토콜로 처리하는 것이 아닌 Byte Array로서 데이터를 Raw하게 저장을 진행한다.
+
+
+2. Implement BPF Emulator
+
 
 ### INSTALL 
 ```shell
