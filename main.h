@@ -17,6 +17,11 @@
 #define NONE 0
 #define MAX_BUFFER 1024
 
+#define BPF_FILTER_FALSE 0 
+#define BPF_FILTER_TRUE 1
+#define BPF_FILTER_CONTINUE 2 
+#define BPF_FILTER_NOT_FETCH_INS 3
+
 typedef struct parser_state{
     struct block *blk;
     struct block *chunks[CHUNK_NUM]; 
@@ -81,8 +86,16 @@ file_state_t* load_pcap(const char* file);
 
 void bpf_emulator(parser_state *pstate);
 void bpf_command_help();
-void bpf_command_n();
+int bpf_command_n(parser_state *pstate);
+void init_bpf_emu(parser_state *pstate);
 int compare_string_command(char* command);
+struct bpf_insn load_bpf_ins_from_offset(parser_state *pstate);
+packet_t* load_packet_from_index(parser_state *pstate);
+int bpf_instruction_filter(parser_state *pstate, struct bpf_insn ins, packet_t *packet);
+
+int extract_short(uint8_t *p);
+int extrack_long(uint8_t* p);
+
 
 void dump_hex(uint8_t* data, size_t size);
 
