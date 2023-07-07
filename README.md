@@ -1,6 +1,6 @@
 # BPF EMULATOR FOR USERSPACE  
 userspace에서 pcap을 대상으로 실행가능한 프로그램 
-현재는 bpf instruction을 뽑아내는 기능 구현
+사용자가 정의한 룰을 BPF Instruction에 맞게 추출해내고 해당 Instruction을 기반으로 사용자가 정의한 pcap 패킷 파일을 통해 패킷들의 REJECT, ACCEPT 여부를 확인하는 툴  
 
 ## Architecture
 기능적인 구현은 아래 2가지의 구현을 가진다.  
