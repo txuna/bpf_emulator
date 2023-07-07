@@ -270,7 +270,6 @@ F3 3C E1 13 AC 10 0B 01  00 00 00 00 00 00 AC 10  0B C2                    |  .<
 ──────────[ANALYSIC]─────────
 Ethernet Type : ARP
 ──────────[COMMAND]──────────
->]──────────
 > n
 ```
 - case 2
@@ -304,8 +303,6 @@ Source IP : 10.34.0.1
 Destination IP : 10.31.0.1
 IP Protocol : ICMP
 ──────────[COMMAND]──────────
->
-
 > n
 
 ```
