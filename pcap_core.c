@@ -3,7 +3,7 @@
 packet_handler_t* pcap_parser(const char* file)
 {
     file_state_t *file_state = load_pcap(file);
-    if(file_state->buffer == NULL)
+    if(file_state == NULL)
     {
         return NULL;
     }
@@ -74,7 +74,8 @@ file_state_t* load_pcap(const char* file)
     int fd = open(file, O_RDONLY);
     if(fd == -1)
     {   
-        perror("Can't not open file\n");
+        perror("Can't not open file");
+        free(file_state);
         return NULL;
     }
 
@@ -84,7 +85,6 @@ file_state_t* load_pcap(const char* file)
     file_state->buffer = (uint8_t*)malloc(sizeof(uint8_t) * file_state->size);
     if(file_state->buffer == NULL)
     {
-        perror("malloc()\n");
         return NULL;
     }
     

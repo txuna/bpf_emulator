@@ -197,11 +197,118 @@ void display_progess(parser_state *pstate)
   
 
 ### INSTALL 
+예제 pcap file은 tcpreplay:github의 테스트용 pcap파일입니다. 
 ```shell
 git clone https://github.com/txuna/bpf_emulator.git
 cd bpf_emulator/ 
 sh build.sh 
-./bpf tpc src port 80
+./bpf test.pcap tcp src port 80
+```
+
+### Grammar 
+기본적으로 OR 연산과 AND연산을 제공합니다.  
+AND연산은 OR연산보다 우선순위가 높습니다.  
+NOT 연산은 제공하지 않으나 기능은 구현되어있어 추후 추가 예정입니다.  
+
+사용가능한 프로토콜   
+- IP   
+- ARP   
+- ICMP   
+- TCP  
+- UDP   
+
+사용가능한 Direction  
+- SRC     
+- DST   
+
+사용가능한 Selector(Address)    
+- PORT   
+- HOST   
+
+룰 예제  
+```Shell
+ip 
+ip src host 1.1.1.1
+ip dst host 2.2.2.2
+tcp 
+tcp src port 80
+tcp dst port 80 
+udp 
+icmp 
+icmp code 1
+icmp type 1
+
+tcp or icmp code 1
+ip and tcp or udp
 ```
 
 ### EXAMPLE 
+
+- case 1
+```Shell
+./bpf test.pcap tcp src prot 80 
+─────────[REGISTER]─────────
+A(Accumulator)      : 0x6
+X(Index Register)   : 0x0
+PC(Program Counter) : 4
+────────[DISASSEMBLY]────────
+(000) ldh [12]
+(001) jeq #0x800                jt 2    jf 10
+(002) ldb [23]
+(003) jeq #0x6          jt 4    jf 10
+=>(004) ldh [20]
+(005) jset #0x1fff              jt 10   jf 6
+(006) ldxb 4*([14]&0xf)
+(007) ldh [x + 14]
+(008) jeq #0x50         jt 9    jf 10
+(009) ret #0x1
+(010) ret #0x0
+───────[PACKET : 000]───────
+00 1F F3 3C E1 13 F8 1E  DF E5 84 3A 08 00 45 00  00 4F DE 53 40 00 40 06  |  ...<.......:..E..O.S@.@.
+47 AB AC 10 0B 0C 4A 7D  13 11 FC 35 01 BB C6 D9  14 D0 C5 1E 2D BF 80 18  |  G.....J}...5........-...
+FF FF CB 8C 00 00 01 01  08 0A 1A 7D 84 2C 37 C5  58 B0 15 03 01 00 16 43  |  ...........}.,7.X......C
+1A 88 1E FA 7A BC 22 6E  E6 32 7A 53 47 00 A7 5D  CC 64 EA 8E 92           |  ....z."n.2zSG..].d...
+──────────[ANALYSIC]─────────
+Ethernet Type : IPv4
+Source IP : 172.16.11.12
+Destination IP : 74.125.19.17
+IP Protocol : TCP
+Source Port : 13820
+Destination Port : 47873
+──────────[COMMAND]──────────
+> n
+```
+- case 2
+```Shell
+./bpf test.pcap test or udp
+─────────[REGISTER]─────────
+A(Accumulator)      : 0x0
+X(Index Register)   : 0x0
+PC(Program Counter) : 0
+────────[DISASSEMBLY]────────
+=>(000) ldh [12]
+(001) jeq #0x800                jt 2    jf 9
+(002) ldb [23]
+(003) jeq #0x6          jt 8    jf 4
+(004) ldh [12]
+(005) jeq #0x800                jt 6    jf 9
+(006) ldb [23]
+(007) jeq #0x11         jt 8    jf 9
+(008) ret #0x1
+(009) ret #0x0
+───────[PACKET : 000]───────
+00 1F F3 3C E1 13 F8 1E  DF E5 84 3A 08 00 45 00  00 4F DE 53 40 00 40 06  |  ...<.......:..E..O.S@.@.
+47 AB AC 10 0B 0C 4A 7D  13 11 FC 35 01 BB C6 D9  14 D0 C5 1E 2D BF 80 18  |  G.....J}...5........-...
+FF FF CB 8C 00 00 01 01  08 0A 1A 7D 84 2C 37 C5  58 B0 15 03 01 00 16 43  |  ...........}.,7.X......C
+1A 88 1E FA 7A BC 22 6E  E6 32 7A 53 47 00 A7 5D  CC 64 EA 8E 92           |  ....z."n.2zSG..].d...
+──────────[ANALYSIC]─────────
+Ethernet Type : IPv4
+Source IP : 172.16.11.12
+Destination IP : 74.125.19.17
+IP Protocol : TCP
+Source Port : 13820
+Destination Port : 47873
+──────────[COMMAND]──────────
+> n
+
+```

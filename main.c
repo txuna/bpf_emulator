@@ -2,8 +2,21 @@
 
 int main(int argc, char **argv)
 {
-    if(argc < 2)
+    if(argc < 3)
     {
+        printf("Usage : ./bpf [PCAP FILE] [RULES]\n");
+        return 1;
+    }
+
+    if(argc > 20)
+    {
+        printf("Too Many Rules...!\n");
+        return 1;
+    }
+
+    if(strlen(argv[1]) >= 20)
+    {
+        printf("Too Long PCAP FILE\n");
         return 1;
     }
 
@@ -21,22 +34,13 @@ int main(int argc, char **argv)
     }
     gen_bpf_insn(&p);
 
-    packet_handler_t *packet_handler = pcap_parser("packet.pcap");
+    packet_handler_t *packet_handler = pcap_parser(argv[1]);
     if(packet_handler == NULL)
     {
         goto bpf_clean;
     }
     
     p.packet_handler = packet_handler;
-    
-    //test
-    /* 
-    for(int i=0; i<p.packet_handler->pkt_num;i++)
-    {
-        ethernet_t *ether = (ethernet_t*)p.packet_handler->pkt[i].pkt_array;
-        printf("ETHER TYPE : 0x%x\n", ntohs(ether->protocol));
-    }
-    */
     bpf_emulator(&p);
 
 pcap_clean:
@@ -61,7 +65,7 @@ int node_parse(const char *string, parser_state *p)
 
 char* concatenate_argv(int argc, char* argv[]) {
     int totalLength = 0;
-    for (int i = 1; i < argc; i++) {
+    for (int i = 2; i < argc; i++) {
         totalLength += strlen(argv[i]);
     }
 
@@ -71,10 +75,10 @@ char* concatenate_argv(int argc, char* argv[]) {
     char* result = (char*)malloc(resultLength);
     result[0] = '\0';
 
-    for (int i = 1; i < argc; i++) {
+    for (int i = 2; i < argc; i++) {
         strcat(result, argv[i]);
 
-        if (i < argc - 1) {
+        if (i < argc - 2) {
             strcat(result, " ");
         }
     }
