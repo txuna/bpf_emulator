@@ -247,68 +247,65 @@ ip and tcp or udp
 - case 1
 ```Shell
 ./bpf test.pcap tcp src prot 80 
-─────────[REGISTER]─────────
-A(Accumulator)      : 0x6
-X(Index Register)   : 0x0
-PC(Program Counter) : 4
-────────[DISASSEMBLY]────────
-(000) ldh [12]
-(001) jeq #0x800                jt 2    jf 10
-(002) ldb [23]
-(003) jeq #0x6          jt 4    jf 10
-=>(004) ldh [20]
-(005) jset #0x1fff              jt 10   jf 6
-(006) ldxb 4*([14]&0xf)
-(007) ldh [x + 14]
-(008) jeq #0x50         jt 9    jf 10
-(009) ret #0x1
-(010) ret #0x0
-───────[PACKET : 000]───────
-00 1F F3 3C E1 13 F8 1E  DF E5 84 3A 08 00 45 00  00 4F DE 53 40 00 40 06  |  ...<.......:..E..O.S@.@.
-47 AB AC 10 0B 0C 4A 7D  13 11 FC 35 01 BB C6 D9  14 D0 C5 1E 2D BF 80 18  |  G.....J}...5........-...
-FF FF CB 8C 00 00 01 01  08 0A 1A 7D 84 2C 37 C5  58 B0 15 03 01 00 16 43  |  ...........}.,7.X......C
-1A 88 1E FA 7A BC 22 6E  E6 32 7A 53 47 00 A7 5D  CC 64 EA 8E 92           |  ....z."n.2zSG..].d...
-──────────[ANALYSIC]─────────
-Ethernet Type : IPv4
-Source IP : 172.16.11.12
-Destination IP : 74.125.19.17
-IP Protocol : TCP
-Source Port : 13820
-Destination Port : 47873
-──────────[COMMAND]──────────
-> n
-```
-- case 2
-```Shell
-./bpf test.pcap test or udp
+ PAKCET INDEX(008) HAS REJECT
 ─────────[REGISTER]─────────
 A(Accumulator)      : 0x0
 X(Index Register)   : 0x0
 PC(Program Counter) : 0
 ────────[DISASSEMBLY]────────
 =>(000) ldh [12]
-(001) jeq #0x800                jt 2    jf 9
+(001) jeq #0x800                jt 2    jf 10
 (002) ldb [23]
-(003) jeq #0x6          jt 8    jf 4
-(004) ldh [12]
-(005) jeq #0x800                jt 6    jf 9
-(006) ldb [23]
-(007) jeq #0x11         jt 8    jf 9
-(008) ret #0x1
-(009) ret #0x0
-───────[PACKET : 000]───────
-00 1F F3 3C E1 13 F8 1E  DF E5 84 3A 08 00 45 00  00 4F DE 53 40 00 40 06  |  ...<.......:..E..O.S@.@.
-47 AB AC 10 0B 0C 4A 7D  13 11 FC 35 01 BB C6 D9  14 D0 C5 1E 2D BF 80 18  |  G.....J}...5........-...
-FF FF CB 8C 00 00 01 01  08 0A 1A 7D 84 2C 37 C5  58 B0 15 03 01 00 16 43  |  ...........}.,7.X......C
-1A 88 1E FA 7A BC 22 6E  E6 32 7A 53 47 00 A7 5D  CC 64 EA 8E 92           |  ....z."n.2zSG..].d...
+(003) jeq #0x6          jt 4    jf 10
+(004) ldh [20]
+(005) jset #0x1fff              jt 10   jf 6
+(006) ldxb 4*([14]&0xf)
+(007) ldh [x + 14]
+(008) jeq #0x50         jt 9    jf 10
+(009) ret #0x1
+(010) ret #0x0
+───────[PACKET : 009]───────
+FF FF FF FF FF FF 00 1F  F3 3C E1 13 08 06 00 01  08 00 06 04 00 01 00 1F  |  .........<..............
+F3 3C E1 13 AC 10 0B 01  00 00 00 00 00 00 AC 10  0B C2                    |  .<................
+──────────[ANALYSIC]─────────
+Ethernet Type : ARP
+──────────[COMMAND]──────────
+>]──────────
+> n
+```
+- case 2
+```Shell
+./bpf test.pcap tcp src prot 80 
+─────────[REGISTER]─────────
+A(Accumulator)      : 0x800
+X(Index Register)   : 0x0
+PC(Program Counter) : 2
+────────[DISASSEMBLY]────────
+(000) ldh [12]
+(001) jeq #0x800                jt 2    jf 10
+=>(002) ldb [23]
+(003) jeq #0x6          jt 4    jf 10
+(004) ldh [20]
+(005) jset #0x1fff              jt 10   jf 6
+(006) ldxb 4*([14]&0xf)
+(007) ldh [x + 14]
+(008) jeq #0x50         jt 9    jf 10
+(009) ret #0x1
+(010) ret #0x0
+───────[PACKET : 011]───────
+00 30 96 05 28 38 00 30  96 E6 FC 39 08 00 45 00  00 54 00 51 00 00 FD 01  |  .0..(8.0...9..E..T.Q....
+A9 05 0A 22 00 01 0A 1F  00 01 00 00 C5 10 0F 66  12 A0 00 00 00 00 00 53  |  ..."...........f.......S
+9E E0 AB CD AB CD AB CD  AB CD AB CD AB CD AB CD  AB CD AB CD AB CD AB CD  |  ........................
+AB CD AB CD AB CD AB CD  AB CD AB CD AB CD AB CD  AB CD AB CD AB CD AB CD  |  ........................
+AB CD AB CD AB CD AB CD  AB CD AB CD AB CD AB CD  AB CD                    |  ..................
 ──────────[ANALYSIC]─────────
 Ethernet Type : IPv4
-Source IP : 172.16.11.12
-Destination IP : 74.125.19.17
-IP Protocol : TCP
-Source Port : 13820
-Destination Port : 47873
+Source IP : 10.34.0.1
+Destination IP : 10.31.0.1
+IP Protocol : ICMP
 ──────────[COMMAND]──────────
+>
+
 > n
 
 ```
