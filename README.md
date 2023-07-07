@@ -194,7 +194,12 @@ void display_progess(parser_state *pstate)
 }
 ```
 위의 함수를 통해서 현재의 진행상태에 대해 출력한다.   
-  
+
+### Dependancy
+```
+1. flex 
+2. bison
+```
 
 ### INSTALL 
 예제 pcap file은 tcpreplay:github의 테스트용 pcap파일입니다. 
